@@ -9,6 +9,7 @@ import {
   updateActivity,
   deleteActivity,
   subscribeToTrip,
+  createInvitation,
 } from '../lib/firestore';
 import { Trip, TripFormData } from '../types/trip';
 import { ActivityFormData } from '../types/itinerary';
@@ -133,6 +134,25 @@ export const useDeleteActivity = () => {
       dateKey: string;
       activityId: string;
     }) => deleteActivity(tripId, dateKey, activityId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['trip', variables.tripId] });
+    },
+  });
+};
+
+export const useCreateInvitation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      tripId,
+      invitedEmail,
+      invitedBy,
+    }: {
+      tripId: string;
+      invitedEmail: string;
+      invitedBy: string;
+    }) => createInvitation(tripId, invitedEmail, invitedBy),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['trip', variables.tripId] });
     },
