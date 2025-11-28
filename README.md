@@ -38,7 +38,19 @@ A collaborative trip planning application inspired by Wanderlog. Plan your perfe
 - **Cloud Firestore** - Real-time database
 - **Google Maps JavaScript API** - Maps and directions
 
-## 📋 Prerequisites
+## � Documentation
+
+**Comprehensive guides available in the [`/docs`](./docs) folder:**
+
+- 🚀 **[Quick Deploy Guide](./docs/QUICK_DEPLOY.md)** - Get your app live in 3 steps
+- 🔥 **[Firebase Setup Guide](./docs/FIREBASE_SETUP.md)** - Complete Firebase configuration
+- 📦 **[Full Deployment Guide](./docs/DEPLOYMENT_GUIDE.md)** - Detailed deployment instructions
+- 🔐 **[Auth System Documentation](./docs/AUTH_REFACTOR_SUMMARY.md)** - Authentication architecture
+- 👥 **[Guest Mode Guide](./docs/GUEST_MODE.md)** - Local storage guest functionality
+
+---
+
+## � Prerequisites
 
 Before you begin, ensure you have:
 
@@ -74,12 +86,13 @@ npm install --legacy-peer-deps
    - Go to Firestore Database
    - Create database in production mode
    - Choose a location close to your users
-
 5. Get your Firebase config:
    - Go to Project Settings → General
    - Scroll down to "Your apps"
    - Click the web icon (</>) to register a web app
    - Copy the Firebase configuration
+
+📖 **For detailed setup with security rules:** [docs/FIREBASE_SETUP.md](./docs/FIREBASE_SETUP.md)
 
 ### 4. Google Maps API Setup
 
@@ -117,48 +130,15 @@ VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 
 ### 6. Firestore Security Rules
 
-Go to Firestore → Rules and paste these security rules:
+**⚠️ Important:** You must configure Firestore security rules for the app to work properly.
 
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-    
-    function canAccessTrip(tripData) {
-      return isAuthenticated() && 
-             (request.auth.uid == tripData.ownerId || 
-              request.auth.uid in tripData.participants);
-    }
-    
-    match /users/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-    }
-    
-    match /trips/{tripId} {
-      allow read: if canAccessTrip(resource.data);
-      allow create: if isAuthenticated();
-      allow update: if canAccessTrip(resource.data);
-      allow delete: if isOwner(resource.data.ownerId);
-    }
-    
-    match /invitations/{invitationId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow delete: if isAuthenticated();
-    }
-  }
-}
-```
+📖 **Complete security rules:** [docs/FIREBASE_SETUP.md](./docs/FIREBASE_SETUP.md#%EF%B8%8F-3-set-up-firestore-security-rules)
+
+The security rules ensure:
+- Users can only access their own data
+- Trip participants can view shared trips
+- Only trip owners can modify/delete trips
+- Proper authentication is enforced
 
 ### 7. Run the Development Server
 
@@ -267,6 +247,19 @@ npm run preview
 
 ## 🚢 Deployment
 
+### Quick Deploy to Firebase Hosting
+
+```bash
+# One-time setup
+npm install -g firebase-tools
+firebase login
+
+# Deploy (build + deploy)
+npm run deploy
+```
+
+📖 **See [Quick Deploy Guide](./docs/QUICK_DEPLOY.md)** for step-by-step instructions.
+
 ### Deploy to Vercel
 
 ```bash
@@ -277,27 +270,17 @@ npm i -g vercel
 vercel
 ```
 
-### Deploy to Firebase Hosting
+### Detailed Deployment Instructions
 
-```bash
-# Install Firebase CLI
-npm install -g firebase-tools
-
-# Login
-firebase login
-
-# Initialize
-firebase init hosting
-
-# Deploy
-firebase deploy --only hosting
-```
+For complete deployment guides with troubleshooting:
+- **Firebase Hosting:** [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)
+- **Quick Reference:** [docs/QUICK_DEPLOY.md](./docs/QUICK_DEPLOY.md)
 
 ### Environment Variables
 
 Remember to set environment variables in your hosting platform:
 - Vercel: Project Settings → Environment Variables
-- Firebase: Use `.env.production` file
+- Firebase: Environment variables are baked into the build from `.env`
 
 ## 🔒 Security Best Practices
 

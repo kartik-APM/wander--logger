@@ -1,16 +1,21 @@
 import { MapPin, LogOut } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
+import { doSignOut } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
 
 export const Header: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/login');
+    try {
+      await doSignOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
   };
 
   return (
@@ -21,16 +26,16 @@ export const Header: React.FC = () => {
           <h1 className="text-xl font-bold">Wander Logger</h1>
         </div>
         
-        {user && (
+        {currentUser && (
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium">{user.displayName}</p>
-              <p className="text-xs text-muted-foreground">{user.email}</p>
+              <p className="text-sm font-medium">{currentUser.displayName}</p>
+              <p className="text-xs text-muted-foreground">{currentUser.email}</p>
             </div>
             <Avatar>
-              <AvatarImage src={user.photoURL} alt={user.displayName} />
+              <AvatarImage src={currentUser.photoURL} alt={currentUser.displayName} />
               <AvatarFallback>
-                {user.displayName.charAt(0).toUpperCase()}
+                {currentUser.displayName.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <Button variant="outline" size="icon" onClick={handleSignOut}>

@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { useAddActivity, useUpdateActivity } from '@/hooks/useTripData';
 import { useGuestTrips } from '@/hooks/useGuestTrips';
-import { useUserStore } from '@/store/userStore';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ActivityFormDialogProps {
   open: boolean;
@@ -34,7 +34,7 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
   activity,
   mode,
 }) => {
-  const { user } = useUserStore();
+  const { currentUser } = useAuth();
   const isGuestTrip = tripId.startsWith('guest_');
   
   // Firebase hooks
@@ -77,30 +77,45 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
 
   const onSubmit = async (data: ActivityFormData) => {
     try {
+      // Clean up the data - remove undefined, empty strings, and NaN values
+      const cleanedData: ActivityFormData = {
+        title: data.title,
+        allDay: data.allDay,
+        ...(data.time && { time: data.time }),
+        ...(data.description && { description: data.description }),
+        ...(data.placeId && { placeId: data.placeId }),
+        ...(data.lat && !isNaN(data.lat) && { lat: data.lat }),
+        ...(data.lng && !isNaN(data.lng) && { lng: data.lng }),
+        ...(data.mapLink && { mapLink: data.mapLink }),
+      };
+
       if (isGuestTrip) {
         // Guest mode
         if (mode === 'create') {
-          addGuestActivity(tripId, dateKey, data);
+          addGuestActivity(tripId, dateKey, cleanedData);
         } else if (mode === 'edit' && activity) {
-          updateGuestActivity(tripId, dateKey, activity.id, data);
+          updateGuestActivity(tripId, dateKey, activity.id, cleanedData);
         }
       } else {
         // Authenticated mode
-        if (!user) return;
+        if (!currentUser) {
+          console.error('User not authenticated');
+          return;
+        }
         
         if (mode === 'create') {
           await addFirebaseActivity.mutateAsync({
             tripId,
             dateKey,
-            userId: user.uid,
-            activityData: data,
+            userId: currentUser.uid,
+            activityData: cleanedData,
           });
         } else if (mode === 'edit' && activity) {
           await updateFirebaseActivity.mutateAsync({
             tripId,
             dateKey,
             activityId: activity.id,
-            activityData: data,
+            activityData: cleanedData,
           });
         }
       }
@@ -108,6 +123,7 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
       onOpenChange(false);
     } catch (error) {
       console.error('Failed to save activity:', error);
+      alert('Failed to save activity. Please try again.');
     }
   };
 
@@ -192,7 +208,9 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
                 type="number"
                 step="any"
                 placeholder="48.8584"
-                {...register('lat', { valueAsNumber: true })}
+                {...register('lat', {
+                  setValueAs: (v) => v === '' || v === null ? undefined : parseFloat(v)
+                })}
               />
             </div>
             <div className="space-y-2">
@@ -202,7 +220,9 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
                 type="number"
                 step="any"
                 placeholder="2.2945"
-                {...register('lng', { valueAsNumber: true })}
+                {...register('lng', {
+                  setValueAs: (v) => v === '' || v === null ? undefined : parseFloat(v)
+                })}
               />
             </div>
           </div>

@@ -16,25 +16,25 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useUserTrips, useCreateTrip } from '@/hooks/useTripData';
 import { useGuestTrips } from '@/hooks/useGuestTrips';
 import { useForm } from 'react-hook-form';
 import { TripFormData } from '@/types/trip';
 
 export const DashboardPage: React.FC = () => {
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
   // Fetch trips based on auth state
-  const { data: firebaseTrips, isLoading: firebaseLoading } = useUserTrips(user?.uid);
+  const { data: firebaseTrips, isLoading: firebaseLoading } = useUserTrips(currentUser?.uid);
   const { trips: guestTrips, loading: guestLoading, createTrip: createGuestTrip } = useGuestTrips();
   const createTrip = useCreateTrip();
 
   // Use appropriate trips based on auth state
-  const trips = user ? firebaseTrips : guestTrips;
-  const isLoading = user ? firebaseLoading : guestLoading;
+  const trips = currentUser ? firebaseTrips : guestTrips;
+  const isLoading = currentUser ? firebaseLoading : guestLoading;
 
   const {
     register,
@@ -47,10 +47,10 @@ export const DashboardPage: React.FC = () => {
     try {
       let tripId: string;
       
-      if (user) {
+      if (currentUser) {
         // Authenticated user - save to Firebase
         tripId = await createTrip.mutateAsync({
-          userId: user.uid,
+          userId: currentUser.uid,
           tripData: data,
         });
       } else {
@@ -70,7 +70,7 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      {!user && <GuestBanner />}
+      {!currentUser && <GuestBanner />}
       
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">

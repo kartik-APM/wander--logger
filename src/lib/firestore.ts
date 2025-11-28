@@ -12,7 +12,6 @@ import {
   Timestamp,
   serverTimestamp,
   arrayUnion,
-  arrayRemove,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { Trip, TripFormData, Invitation } from '../types/trip';

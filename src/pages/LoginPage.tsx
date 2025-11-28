@@ -1,19 +1,36 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
+import { doSignInWithGoogle } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const LoginPage: React.FC = () => {
-  const { user, loading, signInWithGoogle } = useAuth();
+  const { userLoggedIn, loading } = useAuth();
   const navigate = useNavigate();
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
   useEffect(() => {
-    if (user && !loading) {
+    if (userLoggedIn && !loading) {
       navigate('/dashboard');
     }
-  }, [user, loading, navigate]);
+  }, [userLoggedIn, loading, navigate]);
+
+  const handleGoogleSignIn = async () => {
+    if (isSigningIn) return;
+    
+    setIsSigningIn(true);
+    try {
+      await doSignInWithGoogle();
+      // User will be redirected by the useEffect above
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      alert(error.message || 'Failed to sign in with Google');
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -35,12 +52,12 @@ export const LoginPage: React.FC = () => {
               Sign in to create and manage your travel plans
             </p>
             <Button
-              onClick={signInWithGoogle}
-              disabled={loading}
+              onClick={handleGoogleSignIn}
+              disabled={isSigningIn || loading}
               className="w-full flex items-center justify-center gap-3 h-12"
               size="lg"
             >
-              {loading ? (
+              {isSigningIn ? (
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
               ) : (
                 <>

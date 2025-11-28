@@ -143,8 +143,8 @@ const MapViewComponent: React.FC<MapViewProps> = ({ activities }) => {
           travelMode: google.maps.TravelMode.DRIVING,
           optimizeWaypoints: false,
         },
-        (result, status) => {
-          if (status === 'OK' && result) {
+        (result: google.maps.DirectionsResult | null, status: google.maps.DirectionsStatus) => {
+          if (status === google.maps.DirectionsStatus.OK && result) {
             directionsRendererRef.current?.setDirections(result);
           } else {
             console.error('Directions request failed:', status);

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { LogIn, Cloud, Users, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -7,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useAuth } from '@/hooks/useAuth';
+import { doSignInWithGoogle } from '@/lib/auth';
 
 interface SignInPromptProps {
   open: boolean;
@@ -20,11 +21,21 @@ export const SignInPrompt: React.FC<SignInPromptProps> = ({
   onOpenChange,
   reason = 'save',
 }) => {
-  const { signInWithGoogle } = useAuth();
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
   const handleSignIn = async () => {
-    await signInWithGoogle();
-    onOpenChange(false);
+    if (isSigningIn) return;
+    
+    setIsSigningIn(true);
+    try {
+      await doSignInWithGoogle();
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      alert(error.message || 'Failed to sign in with Google');
+    } finally {
+      setIsSigningIn(false);
+    }
   };
 
   const reasons = {
@@ -74,9 +85,18 @@ export const SignInPrompt: React.FC<SignInPromptProps> = ({
             </div>
           </div>
 
-          <Button onClick={handleSignIn} className="w-full h-12" size="lg">
-            <LogIn className="h-5 w-5 mr-2" />
-            Sign in with Google
+          <Button 
+            onClick={handleSignIn} 
+            className="w-full h-12" 
+            size="lg"
+            disabled={isSigningIn}
+          >
+            {isSigningIn ? (
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
+            ) : (
+              <LogIn className="h-5 w-5 mr-2" />
+            )}
+            {isSigningIn ? 'Signing in...' : 'Sign in with Google'}
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">

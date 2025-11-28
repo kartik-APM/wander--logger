@@ -21,7 +21,7 @@ const ActivityCardComponent: React.FC<ActivityCardProps> = ({
   activity,
   tripId,
   dateKey,
-  onEdit,
+  // onEdit, // Not used - ActivityFormDialog handles updates directly
   onDelete,
   onClick,
   isSelected,

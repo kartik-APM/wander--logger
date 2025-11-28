@@ -7,13 +7,13 @@ import { ItineraryPanel } from '@/components/itinerary/ItineraryPanel';
 import { MapView } from '@/components/map/MapView';
 import { useTrip } from '@/hooks/useTripData';
 import { useGuestTrips } from '@/hooks/useGuestTrips';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useTripStore } from '@/store/tripStore';
 import { Trip } from '@/types/trip';
 
 export const TripPage: React.FC = () => {
   const { tripId } = useParams<{ tripId: string }>();
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
   const { selectedDate } = useTripStore();
   
   // Determine if this is a guest trip
@@ -92,7 +92,7 @@ export const TripPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      {!user && <GuestBanner />}
+      {!currentUser && <GuestBanner />}
       <TripBanner trip={trip} />
       
       <div className="flex-1 flex relative">

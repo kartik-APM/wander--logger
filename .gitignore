@@ -40,7 +40,8 @@ dist-ssr
 *.pem
 .vercel
 .firebase
-.firebaserc
+**/firebase-debug.log
+**/firestore-debug.log
 
 # TypeScript
 *.tsbuildinfo
