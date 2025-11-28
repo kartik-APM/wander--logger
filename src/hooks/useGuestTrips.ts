@@ -86,10 +86,21 @@ export const useGuestTrips = () => {
     const activityIndex = trip.days[dateKey].activities.findIndex(a => a.id === activityId);
     if (activityIndex === -1) return;
 
-    trip.days[dateKey].activities[activityIndex] = {
-      ...trip.days[dateKey].activities[activityIndex],
-      ...activityData,
-    };
+    const currentActivity = trip.days[dateKey].activities[activityIndex];
+    const updatedActivity = { ...currentActivity };
+    
+    // Update or remove fields based on whether they're undefined
+    Object.keys(activityData).forEach((key) => {
+      const value = activityData[key as keyof ActivityFormData];
+      if (value !== undefined) {
+        (updatedActivity as any)[key] = value;
+      } else {
+        // Remove the field if it's explicitly set to undefined
+        delete (updatedActivity as any)[key];
+      }
+    });
+    
+    trip.days[dateKey].activities[activityIndex] = updatedActivity;
     trip.updatedAt = Timestamp.now();
 
     localStorageService.saveGuestTrip(trip);

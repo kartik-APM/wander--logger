@@ -57,6 +57,21 @@ export const updateUserProfile = async (
   });
 };
 
+export const getUsersByIds = async (uids: string[]): Promise<User[]> => {
+  if (uids.length === 0) {
+    return [];
+  }
+
+  const users = await Promise.all(
+    uids.map(async (uid) => {
+      const user = await getUserProfile(uid);
+      return user;
+    })
+  );
+
+  return users.filter((user): user is User => user !== null);
+};
+
 // ============================================
 // TRIP OPERATIONS
 // ============================================
@@ -212,11 +227,26 @@ export const updateActivity = async (
   }
 
   const updatedActivities = [...dayActivities];
-  updatedActivities[activityIndex] = {
-    ...updatedActivities[activityIndex],
-    ...activityData,
+  const currentActivity = updatedActivities[activityIndex];
+  
+  // Build the updated activity, removing fields that are undefined
+  const updatedActivity: Activity = {
+    ...currentActivity,
     updatedAt: Timestamp.now(),
   };
+  
+  // Only update fields that are explicitly provided
+  Object.keys(activityData).forEach((key) => {
+    const value = activityData[key as keyof ActivityFormData];
+    if (value !== undefined) {
+      (updatedActivity as any)[key] = value;
+    } else {
+      // Remove the field if it's explicitly set to undefined
+      delete (updatedActivity as any)[key];
+    }
+  });
+  
+  updatedActivities[activityIndex] = updatedActivity;
 
   const updatedDays = {
     ...trip.days,
