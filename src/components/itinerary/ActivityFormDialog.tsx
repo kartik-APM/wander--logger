@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Activity, ActivityFormData } from '@/types/itinerary';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useAddActivity, useUpdateActivity } from '@/hooks/useTripData';
+import { useGuestTrips } from '@/hooks/useGuestTrips';
 import { useUserStore } from '@/store/userStore';
 
 interface ActivityFormDialogProps {
@@ -33,45 +35,74 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
   mode,
 }) => {
   const { user } = useUserStore();
-  const addActivity = useAddActivity();
-  const updateActivity = useUpdateActivity();
+  const isGuestTrip = tripId.startsWith('guest_');
+  
+  // Firebase hooks
+  const addFirebaseActivity = useAddActivity();
+  const updateFirebaseActivity = useUpdateActivity();
+  
+  // Guest hooks
+  const { addActivity: addGuestActivity, updateActivity: updateGuestActivity } = useGuestTrips();
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<ActivityFormData>({
     defaultValues: activity
       ? {
           title: activity.title,
+          allDay: activity.allDay,
           time: activity.time,
           description: activity.description,
           placeId: activity.placeId,
           lat: activity.lat,
           lng: activity.lng,
+          mapLink: activity.mapLink,
         }
       : undefined,
   });
 
-  const onSubmit = async (data: ActivityFormData) => {
-    if (!user) return;
+  const isAllDay = watch('allDay');
+  
+  // Clear time when all day is checked
+  useEffect(() => {
+    if (isAllDay) {
+      setValue('time', undefined);
+    }
+  }, [isAllDay, setValue]);
 
+  const onSubmit = async (data: ActivityFormData) => {
     try {
-      if (mode === 'create') {
-        await addActivity.mutateAsync({
-          tripId,
-          dateKey,
-          userId: user.uid,
-          activityData: data,
-        });
-      } else if (mode === 'edit' && activity) {
-        await updateActivity.mutateAsync({
-          tripId,
-          dateKey,
-          activityId: activity.id,
-          activityData: data,
-        });
+      if (isGuestTrip) {
+        // Guest mode
+        if (mode === 'create') {
+          addGuestActivity(tripId, dateKey, data);
+        } else if (mode === 'edit' && activity) {
+          updateGuestActivity(tripId, dateKey, activity.id, data);
+        }
+      } else {
+        // Authenticated mode
+        if (!user) return;
+        
+        if (mode === 'create') {
+          await addFirebaseActivity.mutateAsync({
+            tripId,
+            dateKey,
+            userId: user.uid,
+            activityData: data,
+          });
+        } else if (mode === 'edit' && activity) {
+          await updateFirebaseActivity.mutateAsync({
+            tripId,
+            dateKey,
+            activityId: activity.id,
+            activityData: data,
+          });
+        }
       }
       reset();
       onOpenChange(false);
@@ -106,15 +137,29 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="time">Time</Label>
-            <Input
-              id="time"
-              type="time"
-              placeholder="09:00 AM"
-              {...register('time')}
+          <div className="flex items-center gap-2">
+            <input
+              id="allDay"
+              type="checkbox"
+              {...register('allDay')}
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
             />
+            <Label htmlFor="allDay" className="cursor-pointer font-normal">
+              All day activity
+            </Label>
           </div>
+
+          {!isAllDay && (
+            <div className="space-y-2">
+              <Label htmlFor="time">Time</Label>
+              <Input
+                id="time"
+                type="time"
+                placeholder="09:00 AM"
+                {...register('time')}
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
@@ -124,6 +169,19 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
               {...register('description')}
               rows={3}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="mapLink">Map Link</Label>
+            <Input
+              id="mapLink"
+              type="url"
+              placeholder="e.g., https://maps.google.com/..."
+              {...register('mapLink')}
+            />
+            <p className="text-xs text-muted-foreground">
+              Paste a Google Maps or any map link for this location
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -160,7 +218,7 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={addActivity.isPending || updateActivity.isPending}>
+            <Button type="submit" disabled={isGuestTrip ? false : (addFirebaseActivity.isPending || updateFirebaseActivity.isPending)}>
               {mode === 'create' ? 'Add Activity' : 'Save Changes'}
             </Button>
           </DialogFooter>

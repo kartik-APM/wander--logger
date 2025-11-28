@@ -1,16 +1,52 @@
 import { useParams } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
 import { Header } from '@/components/layout/Header';
+import { GuestBanner } from '@/components/layout/GuestBanner';
 import { TripBanner } from '@/components/layout/TripBanner';
 import { ItineraryPanel } from '@/components/itinerary/ItineraryPanel';
 import { MapView } from '@/components/map/MapView';
 import { useTrip } from '@/hooks/useTripData';
+import { useGuestTrips } from '@/hooks/useGuestTrips';
+import { useAuth } from '@/hooks/useAuth';
 import { useTripStore } from '@/store/tripStore';
-import { useMemo } from 'react';
+import { Trip } from '@/types/trip';
 
 export const TripPage: React.FC = () => {
   const { tripId } = useParams<{ tripId: string }>();
-  const { data: trip, isLoading, error } = useTrip(tripId);
+  const { user } = useAuth();
   const { selectedDate } = useTripStore();
+  
+  // Determine if this is a guest trip
+  const isGuestTrip = tripId?.startsWith('guest_');
+  
+  // Fetch trip from appropriate source
+  const { data: firebaseTrip, isLoading: firebaseLoading, error: firebaseError } = useTrip(isGuestTrip ? undefined : tripId);
+  const { getTrip } = useGuestTrips();
+  const [guestTrip, setGuestTrip] = useState<Trip | null>(null);
+  
+  // Load guest trip and refresh on changes
+  useEffect(() => {
+    if (isGuestTrip && tripId) {
+      setGuestTrip(getTrip(tripId));
+      
+      // Listen for localStorage changes (from other tabs or components)
+      const handleStorageChange = () => {
+        setGuestTrip(getTrip(tripId));
+      };
+      
+      // Custom event for same-tab updates
+      window.addEventListener('guestTripUpdated', handleStorageChange);
+      
+      return () => {
+        window.removeEventListener('guestTripUpdated', handleStorageChange);
+      };
+    }
+  }, [isGuestTrip, tripId, getTrip]);
+  
+  // Use appropriate trip data
+  const trip = isGuestTrip ? guestTrip : firebaseTrip;
+  const isLoading = isGuestTrip ? false : firebaseLoading;
+  const error = isGuestTrip ? (guestTrip ? null : new Error('Trip not found')) : firebaseError;
 
   const activitiesForMap = useMemo(() => {
     if (!trip) return [];
@@ -56,6 +92,7 @@ export const TripPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
+      {!user && <GuestBanner />}
       <TripBanner trip={trip} />
       
       <div className="flex-1 flex overflow-hidden">

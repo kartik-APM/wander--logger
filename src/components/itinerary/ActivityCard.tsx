@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Clock, MapPin, Trash2, Edit } from 'lucide-react';
+import { Clock, MapPin, Trash2, Edit, ExternalLink } from 'lucide-react';
 import { Activity } from '@/types/itinerary';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,18 +40,36 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold text-base mb-2 truncate">{activity.title}</h4>
             
-            {activity.time && (
+            {activity.allDay ? (
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 mb-2 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">
+                <Clock className="h-3 w-3" />
+                <span>All day</span>
+              </div>
+            ) : activity.time ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+                <Clock className="h-3.5 w-3.5 shrink-0" />
                 <span>{activity.time}</span>
+              </div>
+            ) : null}
+            
+            {(activity.lat && activity.lng) && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">Location added</span>
               </div>
             )}
             
-            {(activity.lat && activity.lng) && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                <span className="truncate">Location added</span>
-              </div>
+            {activity.mapLink && (
+              <a
+                href={activity.mapLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline mb-2"
+              >
+                <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">View on map</span>
+              </a>
             )}
             
             {activity.description && (

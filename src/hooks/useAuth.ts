@@ -7,7 +7,7 @@ import { User } from '../types/user';
 import { Timestamp } from 'firebase/firestore';
 
 export const useAuth = () => {
-  const { user, loading, error, setUser, setLoading, setError, clearUser } = useUserStore();
+  const { user, loading, error, setUser, setError, clearUser } = useUserStore();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -43,12 +43,11 @@ export const useAuth = () => {
 
   const signInWithGoogle = async () => {
     try {
-      setLoading(true);
       setError(null);
       await signInWithPopup(auth, googleProvider);
+      // Auth state listener will handle loading and user state
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign in');
-      setLoading(false);
     }
   };
 

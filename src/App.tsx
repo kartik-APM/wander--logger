@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { TripPage } from './pages/TripPage';
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { ConfigCheck } from './components/ConfigCheck';
 
 const queryClient = new QueryClient({
@@ -40,22 +39,10 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/trip/:tripId"
-            element={
-              <ProtectedRoute>
-                <TripPage />
-              </ProtectedRoute>
-            }
-          />
+          {/* Dashboard - accessible to everyone, shows guest trips for non-logged-in users */}
+          <Route path="/dashboard" element={<DashboardPage />} />
+          {/* Trip planning - accessible to everyone */}
+          <Route path="/trip/:tripId" element={<TripPage />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

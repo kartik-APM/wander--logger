@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Plus, Calendar, Users, MapPin } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
+import { GuestBanner } from '@/components/layout/GuestBanner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -17,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserTrips, useCreateTrip } from '@/hooks/useTripData';
+import { useGuestTrips } from '@/hooks/useGuestTrips';
 import { useForm } from 'react-hook-form';
 import { TripFormData } from '@/types/trip';
 
@@ -25,8 +27,14 @@ export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
-  const { data: trips, isLoading } = useUserTrips(user?.uid);
+  // Fetch trips based on auth state
+  const { data: firebaseTrips, isLoading: firebaseLoading } = useUserTrips(user?.uid);
+  const { trips: guestTrips, loading: guestLoading, createTrip: createGuestTrip } = useGuestTrips();
   const createTrip = useCreateTrip();
+
+  // Use appropriate trips based on auth state
+  const trips = user ? firebaseTrips : guestTrips;
+  const isLoading = user ? firebaseLoading : guestLoading;
 
   const {
     register,
@@ -36,13 +44,21 @@ export const DashboardPage: React.FC = () => {
   } = useForm<TripFormData>();
 
   const onSubmit = async (data: TripFormData) => {
-    if (!user) return;
-
     try {
-      const tripId = await createTrip.mutateAsync({
-        userId: user.uid,
-        tripData: data,
-      });
+      let tripId: string;
+      
+      if (user) {
+        // Authenticated user - save to Firebase
+        tripId = await createTrip.mutateAsync({
+          userId: user.uid,
+          tripData: data,
+        });
+      } else {
+        // Guest user - save to localStorage
+        const newTrip = createGuestTrip(data);
+        tripId = newTrip.id;
+      }
+      
       reset();
       setIsCreateDialogOpen(false);
       navigate(`/trip/${tripId}`);
@@ -54,6 +70,7 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      {!user && <GuestBanner />}
       
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { ActivityCard } from './ActivityCard';
 import { ActivityFormDialog } from './ActivityFormDialog';
 import { useDeleteActivity } from '@/hooks/useTripData';
+import { useGuestTrips } from '@/hooks/useGuestTrips';
 import { useTripStore } from '@/store/tripStore';
 
 interface DayCardProps {
@@ -22,7 +23,13 @@ interface DayCardProps {
 export const DayCard: React.FC<DayCardProps> = ({ dateKey, activities, tripId }) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { selectedActivity, setSelectedActivity } = useTripStore();
-  const deleteActivity = useDeleteActivity();
+  const isGuestTrip = tripId.startsWith('guest_');
+  
+  // Firebase hooks
+  const deleteFirebaseActivity = useDeleteActivity();
+  
+  // Guest hooks
+  const { deleteActivity: deleteGuestActivity } = useGuestTrips();
 
   const date = new Date(dateKey);
   const dayOfWeek = format(date, 'EEEE');
@@ -30,7 +37,11 @@ export const DayCard: React.FC<DayCardProps> = ({ dateKey, activities, tripId })
 
   const handleDeleteActivity = async (activityId: string) => {
     if (window.confirm('Are you sure you want to delete this activity?')) {
-      await deleteActivity.mutateAsync({ tripId, dateKey, activityId });
+      if (isGuestTrip) {
+        deleteGuestActivity(tripId, dateKey, activityId);
+      } else {
+        await deleteFirebaseActivity.mutateAsync({ tripId, dateKey, activityId });
+      }
       if (selectedActivity?.id === activityId) {
         setSelectedActivity(null);
       }
@@ -44,15 +55,35 @@ export const DayCard: React.FC<DayCardProps> = ({ dateKey, activities, tripId })
   return (
     <>
       <AccordionItem value={dateKey} className="border rounded-lg mb-3 overflow-hidden">
-        <AccordionTrigger className="px-6 py-4 hover:no-underline bg-muted/50 hover:bg-muted">
-          <div className="text-left">
+        <div className="flex items-stretch bg-muted/50 hover:bg-muted">
+          {/* Left side - Non-clickable content */}
+          <div className="flex-1 px-6 py-4 text-left">
             <h3 className="text-lg font-bold">{dayOfWeek}</h3>
             <p className="text-sm text-muted-foreground">{formattedDate}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {activities.length} {activities.length === 1 ? 'activity' : 'activities'}
-            </p>
+            {activities.length > 0 ? (
+              <div className="mt-2 space-y-1">
+                {activities.map((activity) => (
+                  <div key={activity.id} className="flex items-start gap-2 text-sm">
+                    <span className="text-muted-foreground">•</span>
+                    <span className="text-muted-foreground line-clamp-1">
+                      {activity.title}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                No activities planned
+              </p>
+            )}
           </div>
-        </AccordionTrigger>
+          
+          {/* Divider */}
+          <div className="w-px bg-border" />
+          
+          {/* Right side - Clickable accordion trigger */}
+          <AccordionTrigger className="px-6 hover:no-underline hover:bg-muted/50" />
+        </div>
         <AccordionContent className="px-6 py-4">
           <div className="space-y-3">
             {activities.length === 0 ? (
