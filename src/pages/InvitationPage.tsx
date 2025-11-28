@@ -23,7 +23,7 @@ export const InvitationPage: React.FC = () => {
 
   useEffect(() => {
     loadInvitationData();
-  }, [invitationId]);
+  }, [invitationId, currentUser]);
 
   const loadInvitationData = async () => {
     if (!invitationId) {
@@ -32,11 +32,17 @@ export const InvitationPage: React.FC = () => {
       return;
     }
 
+    // If user is not logged in, prompt them to login first
+    if (!currentUser) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const invitationData = await getInvitation(invitationId);
       
       if (!invitationData) {
-        setError('Invitation not found');
+        setError('Invitation not found. This invitation may have been deleted or never existed.');
         setLoading(false);
         return;
       }
@@ -60,16 +66,23 @@ export const InvitationPage: React.FC = () => {
 
       setInvitation(invitationData);
 
-      // Load trip details
-      const tripData = await getTrip(invitationData.tripId);
-      if (tripData) {
-        setTrip(tripData);
+      // Load trip details (may fail if user is not a participant yet)
+      try {
+        const tripData = await getTrip(invitationData.tripId);
+        if (tripData) {
+          setTrip(tripData);
+        }
+      } catch (tripErr) {
+        // It's OK if we can't load trip details yet - user isn't a participant
+        console.log('Cannot load trip details yet - user not a participant');
       }
 
       setLoading(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load invitation:', err);
-      setError('Failed to load invitation details');
+      // Provide more detailed error message
+      const errorMsg = err?.message || 'Failed to load invitation details';
+      setError(`Failed to load invitation: ${errorMsg}`);
       setLoading(false);
     }
   };
@@ -103,6 +116,43 @@ export const InvitationPage: React.FC = () => {
     }
   };
 
+  // Not logged in - prompt to login
+  if (!currentUser && !loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex h-[calc(100vh-4rem)] items-center justify-center p-4">
+          <Card className="max-w-md w-full">
+            <CardHeader>
+              <div className="flex items-center gap-2 text-blue-600 mb-2">
+                <AlertCircle className="h-6 w-6" />
+                <CardTitle>Sign In Required</CardTitle>
+              </div>
+              <CardDescription>
+                You need to sign in to accept this trip invitation
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button 
+                onClick={() => navigate(`/login?redirect=/invite/${invitationId}`)} 
+                className="w-full"
+              >
+                Sign In to Continue
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => navigate('/dashboard')} 
+                className="w-full"
+              >
+                Go to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -117,7 +167,7 @@ export const InvitationPage: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error && currentUser) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -170,14 +220,21 @@ export const InvitationPage: React.FC = () => {
           <CardHeader>
             <CardTitle className="text-2xl">You're Invited!</CardTitle>
             <CardDescription>
-              {currentUser ? (
-                <>You've been invited to join a trip</>
-              ) : (
-                <>Sign in to accept this invitation and join the trip</>
-              )}
+              You've been invited to collaborate on a trip
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {!trip && invitation && (
+              <div className="bg-muted/50 rounded-lg p-6 space-y-4">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <AlertCircle className="h-4 w-4" />
+                  <p className="text-sm">
+                    Accept the invitation to view trip details
+                  </p>
+                </div>
+              </div>
+            )}
+            
             {trip && (
               <div className="bg-muted/50 rounded-lg p-6 space-y-4">
                 <div>
@@ -211,38 +268,27 @@ export const InvitationPage: React.FC = () => {
             )}
 
             <div className="flex gap-3">
-              {currentUser ? (
-                <>
-                  <Button
-                    onClick={handleAcceptInvitation}
-                    disabled={accepting}
-                    className="flex-1"
-                  >
-                    {accepting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Accepting...
-                      </>
-                    ) : (
-                      'Accept Invitation'
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate('/dashboard')}
-                    disabled={accepting}
-                  >
-                    Decline
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  onClick={() => navigate(`/login?redirect=/invite/${invitationId}`)}
-                  className="flex-1"
-                >
-                  Sign In to Accept
-                </Button>
-              )}
+              <Button
+                onClick={handleAcceptInvitation}
+                disabled={accepting}
+                className="flex-1"
+              >
+                {accepting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Accepting...
+                  </>
+                ) : (
+                  'Accept Invitation'
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate('/dashboard')}
+                disabled={accepting}
+              >
+                Decline
+              </Button>
             </div>
           </CardContent>
         </Card>
