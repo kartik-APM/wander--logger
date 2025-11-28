@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Calendar, Users, UserPlus } from 'lucide-react';
+import { Calendar, UserPlus } from 'lucide-react';
 import { Trip } from '@/types/trip';
 import { Button } from '@/components/ui/button';
 import { InviteDialog } from '@/components/itinerary/InviteDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { ParticipantAvatars } from '@/components/ui/ParticipantAvatars';
+import { useParticipantProfiles } from '@/hooks/useParticipantProfiles';
 
 interface TripBannerProps {
   trip: Trip;
@@ -19,6 +21,9 @@ export const TripBanner: React.FC<TripBannerProps> = ({ trip }) => {
   // Check if current user is the owner of the trip
   const isOwner = currentUser && trip.ownerId === currentUser.uid;
   const isGuestTrip = trip.id.startsWith('guest_');
+  
+  // Fetch participant profiles
+  const { data: participants = [], isLoading: participantsLoading } = useParticipantProfiles(trip.participants);
 
   return (
     <>
@@ -34,12 +39,23 @@ export const TripBanner: React.FC<TripBannerProps> = ({ trip }) => {
                     {format(startDate, 'MMMM d, yyyy')} - {format(endDate, 'MMMM d, yyyy')}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  <span>
-                    {trip.participants.length} {trip.participants.length === 1 ? 'participant' : 'participants'}
-                  </span>
-                </div>
+                {!isGuestTrip && !participantsLoading && participants.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <ParticipantAvatars 
+                      participants={participants} 
+                      maxDisplay={3} 
+                      size="sm" 
+                      textClassName="text-white/90"
+                    />
+                  </div>
+                )}
+                {isGuestTrip && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span>
+                      {trip.participants.length} {trip.participants.length === 1 ? 'participant' : 'participants'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
             

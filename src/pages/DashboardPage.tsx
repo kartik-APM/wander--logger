@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
-import { Plus, Calendar, Users, MapPin } from 'lucide-react';
+import { Plus, MapPin } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { GuestBanner } from '@/components/layout/GuestBanner';
+import { TripCard } from '@/components/layout/TripCard';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -96,39 +96,11 @@ export const DashboardPage: React.FC = () => {
         ) : trips && trips.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {trips.map((trip) => (
-              <Card
+              <TripCard
                 key={trip.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
+                trip={trip}
                 onClick={() => navigate(`/trip/${trip.id}`)}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-start justify-between">
-                    <span className="line-clamp-1">{trip.title}</span>
-                    <MapPin className="h-5 w-5 text-primary flex-shrink-0 ml-2" />
-                  </CardTitle>
-                  <CardDescription className="space-y-2 pt-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="h-4 w-4" />
-                      <span>
-                        {format(new Date(trip.startDate), 'MMM d')} -{' '}
-                        {format(new Date(trip.endDate), 'MMM d, yyyy')}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Users className="h-4 w-4" />
-                      <span>
-                        {trip.participants.length}{' '}
-                        {trip.participants.length === 1 ? 'participant' : 'participants'}
-                      </span>
-                    </div>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm text-muted-foreground">
-                    {Object.keys(trip.days).length} days planned
-                  </div>
-                </CardContent>
-              </Card>
+              />
             ))}
           </div>
         ) : (
