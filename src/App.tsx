@@ -1,0 +1,67 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { LoginPage } from './pages/LoginPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { TripPage } from './pages/TripPage';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { ConfigCheck } from './components/ConfigCheck';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
+
+// Check if required environment variables are configured
+const isConfigured = () => {
+  const required = [
+    import.meta.env.VITE_FIREBASE_API_KEY,
+    import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+  ];
+  
+  return required.every(
+    (val) => val && val !== 'your_api_key_here' && val !== 'your_project_id' && val !== 'your_google_maps_api_key_here'
+  );
+};
+
+function App() {
+  // Show configuration screen if env variables are not set
+  if (!isConfigured()) {
+    return <ConfigCheck />;
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trip/:tripId"
+            element={
+              <ProtectedRoute>
+                <TripPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+}
+
+export default App;

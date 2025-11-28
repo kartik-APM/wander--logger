@@ -1,0 +1,101 @@
+import { useState } from 'react';
+import { Clock, MapPin, Trash2, Edit } from 'lucide-react';
+import { Activity } from '@/types/itinerary';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { ActivityFormDialog } from './ActivityFormDialog';
+
+interface ActivityCardProps {
+  activity: Activity;
+  tripId: string;
+  dateKey: string;
+  onEdit: (activityId: string, data: Partial<Activity>) => void;
+  onDelete: (activityId: string) => void;
+  onClick?: () => void;
+  isSelected?: boolean;
+}
+
+export const ActivityCard: React.FC<ActivityCardProps> = ({
+  activity,
+  tripId,
+  dateKey,
+  onEdit,
+  onDelete,
+  onClick,
+  isSelected,
+}) => {
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  return (
+    <>
+      <Card
+        className={cn(
+          'p-4 cursor-pointer hover:shadow-md transition-all',
+          isSelected && 'ring-2 ring-primary'
+        )}
+        onClick={onClick}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-base mb-2 truncate">{activity.title}</h4>
+            
+            {activity.time && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+                <span>{activity.time}</span>
+              </div>
+            )}
+            
+            {(activity.lat && activity.lng) && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                <span className="truncate">Location added</span>
+              </div>
+            )}
+            
+            {activity.description && (
+              <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                {activity.description}
+              </p>
+            )}
+          </div>
+          
+          <div className="flex gap-1 flex-shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsEditDialogOpen(true);
+              }}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(activity.id);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      <ActivityFormDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        tripId={tripId}
+        dateKey={dateKey}
+        activity={activity}
+        mode="edit"
+      />
+    </>
+  );
+};
