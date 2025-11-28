@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, memo } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 import { Activity } from '@/types/itinerary';
 import { useTripStore } from '@/store/tripStore';
@@ -7,7 +7,7 @@ interface MapViewProps {
   activities: Activity[];
 }
 
-export const MapView: React.FC<MapViewProps> = ({ activities }) => {
+const MapViewComponent: React.FC<MapViewProps> = ({ activities }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -181,3 +181,26 @@ export const MapView: React.FC<MapViewProps> = ({ activities }) => {
     </div>
   );
 };
+
+// Memoize component with custom comparison to prevent unnecessary re-renders
+export const MapView = memo(MapViewComponent, (prevProps, nextProps) => {
+  // Only re-render if activities with location actually changed
+  const prevActivitiesWithLocation = prevProps.activities.filter(a => a.lat && a.lng);
+  const nextActivitiesWithLocation = nextProps.activities.filter(a => a.lat && a.lng);
+  
+  if (prevActivitiesWithLocation.length !== nextActivitiesWithLocation.length) {
+    return false; // Props changed, re-render
+  }
+  
+  // Check if any activity IDs or positions changed
+  for (let i = 0; i < prevActivitiesWithLocation.length; i++) {
+    const prev = prevActivitiesWithLocation[i];
+    const next = nextActivitiesWithLocation[i];
+    
+    if (prev.id !== next.id || prev.lat !== next.lat || prev.lng !== next.lng) {
+      return false; // Props changed, re-render
+    }
+  }
+  
+  return true; // Props same, skip re-render
+});

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { format } from 'date-fns';
 import { Plus } from 'lucide-react';
 import { Activity } from '@/types/itinerary';
@@ -20,7 +20,7 @@ interface DayCardProps {
   tripId: string;
 }
 
-export const DayCard: React.FC<DayCardProps> = ({ dateKey, activities, tripId }) => {
+const DayCardComponent: React.FC<DayCardProps> = ({ dateKey, activities, tripId }) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { selectedActivity, setSelectedActivity } = useTripStore();
   const isGuestTrip = tripId.startsWith('guest_');
@@ -106,6 +106,7 @@ export const DayCard: React.FC<DayCardProps> = ({ dateKey, activities, tripId })
                     onDelete={handleDeleteActivity}
                     onClick={() => setSelectedActivity(activity)}
                     isSelected={selectedActivity?.id === activity.id}
+                    showFullDescription={true}
                   />
                 ))}
                 <Button
@@ -133,3 +134,5 @@ export const DayCard: React.FC<DayCardProps> = ({ dateKey, activities, tripId })
     </>
   );
 };
+
+export const DayCard = memo(DayCardComponent);

@@ -95,14 +95,14 @@ export const TripPage: React.FC = () => {
       {!user && <GuestBanner />}
       <TripBanner trip={trip} />
       
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel - Itinerary */}
-        <div className="w-full lg:w-2/5 border-r overflow-hidden">
+      <div className="flex-1 flex relative">
+        {/* Left Panel - Itinerary (Scrollable) */}
+        <div className="w-full lg:w-2/5 border-r overflow-y-auto">
           <ItineraryPanel trip={trip} />
         </div>
         
-        {/* Right Panel - Map */}
-        <div className="hidden lg:block lg:w-3/5">
+        {/* Right Panel - Map (Fixed) */}
+        <div className="hidden lg:block lg:w-3/5 sticky top-0 h-screen">
           <MapView activities={activitiesForMap} />
         </div>
       </div>

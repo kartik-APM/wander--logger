@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Clock, MapPin, Trash2, Edit, ExternalLink } from 'lucide-react';
 import { Activity } from '@/types/itinerary';
 import { Card } from '@/components/ui/card';
@@ -14,9 +14,10 @@ interface ActivityCardProps {
   onDelete: (activityId: string) => void;
   onClick?: () => void;
   isSelected?: boolean;
+  showFullDescription?: boolean;
 }
 
-export const ActivityCard: React.FC<ActivityCardProps> = ({
+const ActivityCardComponent: React.FC<ActivityCardProps> = ({
   activity,
   tripId,
   dateKey,
@@ -24,6 +25,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
   onDelete,
   onClick,
   isSelected,
+  showFullDescription = false,
 }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
@@ -73,7 +75,10 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
             )}
             
             {activity.description && (
-              <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+              <p className={cn(
+                "text-sm text-muted-foreground mt-2 whitespace-pre-wrap",
+                !showFullDescription && "line-clamp-2"
+              )}>
                 {activity.description}
               </p>
             )}
@@ -117,3 +122,5 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
     </>
   );
 };
+
+export const ActivityCard = memo(ActivityCardComponent);
