@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { TripPage } from './pages/TripPage';
+import { InvitationPage } from './pages/InvitationPage';
 import { ConfigCheck } from './components/ConfigCheck';
 
 const queryClient = new QueryClient({
@@ -45,6 +46,8 @@ function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             {/* Trip planning - accessible to everyone */}
             <Route path="/trip/:tripId" element={<TripPage />} />
+            {/* Invitation acceptance - accessible to everyone */}
+            <Route path="/invite/:invitationId" element={<InvitationPage />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

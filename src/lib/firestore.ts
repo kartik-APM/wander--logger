@@ -271,7 +271,7 @@ export const createInvitation = async (
 ): Promise<string> => {
   const invitationRef = doc(collection(db, 'invitations'));
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+  expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours from now
 
   const invitation: Omit<Invitation, 'id'> = {
     tripId,
@@ -284,12 +284,14 @@ export const createInvitation = async (
 
   await setDoc(invitationRef, invitation);
 
-  // Add email to trip's invitedEmails array
-  const tripRef = doc(db, 'trips', tripId);
-  await updateDoc(tripRef, {
-    invitedEmails: arrayUnion(invitedEmail),
-    updatedAt: serverTimestamp(),
-  });
+  // Only add email to trip's invitedEmails array if email is provided
+  if (invitedEmail && invitedEmail.trim()) {
+    const tripRef = doc(db, 'trips', tripId);
+    await updateDoc(tripRef, {
+      invitedEmails: arrayUnion(invitedEmail),
+      updatedAt: serverTimestamp(),
+    });
+  }
 
   return invitationRef.id;
 };
