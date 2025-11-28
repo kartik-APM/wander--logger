@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { doSignInWithGoogle } from '@/lib/auth';
@@ -9,13 +9,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export const LoginPage: React.FC = () => {
   const { userLoggedIn, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   useEffect(() => {
     if (userLoggedIn && !loading) {
-      navigate('/dashboard');
+      // Check if there's a redirect URL in the query params
+      const redirect = searchParams.get('redirect');
+      navigate(redirect || '/dashboard');
     }
-  }, [userLoggedIn, loading, navigate]);
+  }, [userLoggedIn, loading, navigate, searchParams]);
 
   const handleGoogleSignIn = async () => {
     if (isSigningIn) return;

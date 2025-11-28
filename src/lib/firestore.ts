@@ -284,12 +284,14 @@ export const createInvitation = async (
 
   await setDoc(invitationRef, invitation);
 
-  // Add email to trip's invitedEmails array
-  const tripRef = doc(db, 'trips', tripId);
-  await updateDoc(tripRef, {
-    invitedEmails: arrayUnion(invitedEmail),
-    updatedAt: serverTimestamp(),
-  });
+  // Only add email to trip's invitedEmails array if email is provided
+  if (invitedEmail && invitedEmail.trim()) {
+    const tripRef = doc(db, 'trips', tripId);
+    await updateDoc(tripRef, {
+      invitedEmails: arrayUnion(invitedEmail),
+      updatedAt: serverTimestamp(),
+    });
+  }
 
   return invitationRef.id;
 };

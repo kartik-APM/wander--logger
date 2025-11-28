@@ -1,18 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useCreateInvitation } from '@/hooks/useTripData';
 import { useAuth } from '@/contexts/AuthContext';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Copy, Loader2 } from 'lucide-react';
 
 interface InviteDialogProps {
   open: boolean;
@@ -27,128 +25,131 @@ export const InviteDialog: React.FC<InviteDialogProps> = ({
 }) => {
   const { currentUser } = useAuth();
   const createInvitation = useCreateInvitation();
-  const [email, setEmail] = useState('');
+  const [invitationId, setInvitationId] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccess(false);
-
-    if (!email.trim()) {
-      setError('Please enter an email address');
-      return;
+  // Generate invitation link when dialog opens
+  useEffect(() => {
+    if (open && !invitationId && currentUser) {
+      generateInvitation();
     }
+  }, [open]);
 
-    if (!validateEmail(email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
+  const generateInvitation = async () => {
     if (!currentUser) {
-      setError('You must be logged in to send invitations');
+      setError('You must be logged in to create invitations');
       return;
     }
 
+    setError('');
+    
     try {
-      await createInvitation.mutateAsync({
+      const id = await createInvitation.mutateAsync({
         tripId,
-        invitedEmail: email.trim().toLowerCase(),
+        invitedEmail: '', // No email required for shareable links
         invitedBy: currentUser.uid,
       });
       
-      setSuccess(true);
-      setEmail('');
-      
-      // Close dialog after 1.5 seconds
-      setTimeout(() => {
-        setSuccess(false);
-        onOpenChange(false);
-      }, 1500);
+      setInvitationId(id);
     } catch (err) {
-      console.error('Failed to send invitation:', err);
-      setError('Failed to send invitation. Please try again.');
+      console.error('Failed to create invitation:', err);
+      setError('Failed to create invitation. Please try again.');
+    }
+  };
+
+  const getInvitationUrl = () => {
+    if (!invitationId) return '';
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/invite/${invitationId}`;
+  };
+
+  const handleCopyLink = async () => {
+    const url = getInvitationUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+      setError('Failed to copy link. Please copy manually.');
     }
   };
 
   const handleClose = () => {
-    setEmail('');
+    setInvitationId(null);
     setError('');
-    setSuccess(false);
+    setCopied(false);
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Invite Friend to Trip</DialogTitle>
+          <DialogTitle>Invite Friends to Trip</DialogTitle>
           <DialogDescription>
-            Send an invitation to collaborate on this trip. The invitation will be valid for 24 hours.
+            Share this link with friends to invite them to collaborate on this trip. The invitation will be valid for 24 hours.
           </DialogDescription>
         </DialogHeader>
         
-        {success ? (
-          <div className="flex flex-col items-center justify-center py-6 text-center">
-            <div className="mb-4 rounded-full bg-green-100 p-3">
-              <Check className="h-8 w-8 text-green-600" />
-            </div>
-            <p className="text-lg font-semibold text-green-600">Invitation Sent!</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Your friend will receive an invitation email
-            </p>
+        {createInvitation.isPending && !invitationId ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+            <p className="text-sm text-muted-foreground">Generating invitation link...</p>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+        ) : error ? (
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-destructive text-center">{error}</p>
+            <div className="flex justify-center">
+              <Button onClick={generateInvitation} variant="outline">
+                Try Again
+              </Button>
+            </div>
+          </div>
+        ) : invitationId ? (
+          <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="email">Friend's Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="friend@example.com"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setError('');
-                }}
-                disabled={createInvitation.isPending}
-              />
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
+              <label className="text-sm font-medium">Invitation Link</label>
+              <div className="flex gap-2">
+                <Input
+                  value={getInvitationUrl()}
+                  readOnly
+                  className="font-mono text-sm"
+                  onClick={(e) => e.currentTarget.select()}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyLink}
+                  className="flex-shrink-0"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4 mr-2" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Anyone with this link can join the trip within 24 hours.
+              </p>
             </div>
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-                disabled={createInvitation.isPending}
-              >
-                Cancel
+            <div className="flex justify-end gap-2 pt-2">
+              <Button onClick={handleClose}>
+                Done
               </Button>
-              <Button 
-                type="submit" 
-                disabled={createInvitation.isPending}
-              >
-                {createInvitation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  'Send Invitation'
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
+            </div>
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );
