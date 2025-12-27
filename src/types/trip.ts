@@ -1,6 +1,14 @@
 import { Timestamp } from 'firebase/firestore';
 import { DaysMap } from './itinerary';
 
+export interface Note {
+  id: string;
+  title: string;
+  link: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
 export interface Trip {
   id: string;
   ownerId: string;
@@ -12,6 +20,7 @@ export interface Trip {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   days: DaysMap;
+  notes?: Note[];
 }
 
 export interface TripFormData {

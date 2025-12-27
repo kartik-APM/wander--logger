@@ -14,7 +14,7 @@ import {
   arrayUnion,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Trip, TripFormData, Invitation } from '../types/trip';
+import { Trip, TripFormData, Invitation, Note } from '../types/trip';
 import { User } from '../types/user';
 import { Activity, ActivityFormData } from '../types/itinerary';
 import { eachDayOfInterval, format } from 'date-fns';
@@ -385,4 +385,95 @@ export const getUserInvitations = async (
   return querySnapshot.docs.map(
     (doc) => ({ id: doc.id, ...doc.data() } as Invitation)
   );
+};
+
+// ============================================
+// NOTE OPERATIONS
+// ============================================
+
+export const addNote = async (
+  tripId: string,
+  title: string,
+  link: string
+): Promise<void> => {
+  const tripRef = doc(db, 'trips', tripId);
+  const tripDoc = await getDoc(tripRef);
+
+  if (!tripDoc.exists()) {
+    throw new Error('Trip not found');
+  }
+
+  const trip = tripDoc.data() as Trip;
+  const noteId = `note_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+  const newNote: Note = {
+    id: noteId,
+    title,
+    link,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+  };
+
+  const updatedNotes = [...(trip.notes || []), newNote];
+
+  await updateDoc(tripRef, {
+    notes: updatedNotes,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+export const updateNote = async (
+  tripId: string,
+  noteId: string,
+  title: string,
+  link: string
+): Promise<void> => {
+  const tripRef = doc(db, 'trips', tripId);
+  const tripDoc = await getDoc(tripRef);
+
+  if (!tripDoc.exists()) {
+    throw new Error('Trip not found');
+  }
+
+  const trip = tripDoc.data() as Trip;
+  const notes = trip.notes || [];
+  const noteIndex = notes.findIndex((n) => n.id === noteId);
+
+  if (noteIndex === -1) {
+    throw new Error('Note not found');
+  }
+
+  const updatedNotes = [...notes];
+  updatedNotes[noteIndex] = {
+    ...updatedNotes[noteIndex],
+    title,
+    link,
+    updatedAt: Timestamp.now(),
+  };
+
+  await updateDoc(tripRef, {
+    notes: updatedNotes,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+export const deleteNote = async (
+  tripId: string,
+  noteId: string
+): Promise<void> => {
+  const tripRef = doc(db, 'trips', tripId);
+  const tripDoc = await getDoc(tripRef);
+
+  if (!tripDoc.exists()) {
+    throw new Error('Trip not found');
+  }
+
+  const trip = tripDoc.data() as Trip;
+  const notes = trip.notes || [];
+  const filteredNotes = notes.filter((n) => n.id !== noteId);
+
+  await updateDoc(tripRef, {
+    notes: filteredNotes,
+    updatedAt: serverTimestamp(),
+  });
 };

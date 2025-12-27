@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Calendar, UserPlus } from 'lucide-react';
+import { Calendar, UserPlus, StickyNote } from 'lucide-react';
 import { Trip } from '@/types/trip';
 import { Button } from '@/components/ui/button';
 import { InviteDialog } from '@/components/itinerary/InviteDialog';
+import { NotesSection } from '@/components/layout/NotesSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { ParticipantAvatars } from '@/components/ui/ParticipantAvatars';
 import { useParticipantProfiles } from '@/hooks/useParticipantProfiles';
@@ -15,6 +16,7 @@ interface TripBannerProps {
 export const TripBanner: React.FC<TripBannerProps> = ({ trip }) => {
   const { currentUser } = useAuth();
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
   const startDate = new Date(trip.startDate);
   const endDate = new Date(trip.endDate);
   
@@ -59,17 +61,28 @@ export const TripBanner: React.FC<TripBannerProps> = ({ trip }) => {
               </div>
             </div>
             
-            {isOwner && !isGuestTrip && (
+            <div className="flex gap-2">
               <Button
-                onClick={() => setInviteDialogOpen(true)}
+                onClick={() => setNotesOpen(true)}
                 variant="secondary"
                 size="sm"
                 className="bg-white text-blue-600 hover:bg-blue-50 gap-2"
               >
-                <UserPlus className="h-4 w-4" />
-                Invite Friends
+                <StickyNote className="h-4 w-4" />
+                Notes
               </Button>
-            )}
+              {isOwner && !isGuestTrip && (
+                <Button
+                  onClick={() => setInviteDialogOpen(true)}
+                  variant="secondary"
+                  size="sm"
+                  className="bg-white text-blue-600 hover:bg-blue-50 gap-2"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Invite Friends
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -81,6 +94,14 @@ export const TripBanner: React.FC<TripBannerProps> = ({ trip }) => {
           tripId={trip.id}
         />
       )}
+      
+      <NotesSection
+        open={notesOpen}
+        onOpenChange={setNotesOpen}
+        tripId={trip.id}
+        notes={trip.notes}
+        isGuestMode={isGuestTrip}
+      />
     </>
   );
 };
