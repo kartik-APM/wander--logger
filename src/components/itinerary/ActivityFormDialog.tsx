@@ -77,17 +77,19 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
 
   const onSubmit = async (data: ActivityFormData) => {
     try {
-      // Clean up the data - handle optional fields properly, allowing deletion
-      const cleanedData: ActivityFormData = {
+      // Clean up the data - save empty strings for undefined/null values
+      const cleanedData: any = {
         title: data.title,
         allDay: data.allDay,
-        time: data.time || undefined,
-        description: data.description || undefined,
-        placeId: data.placeId || undefined,
-        lat: (data.lat !== undefined && !isNaN(data.lat)) ? data.lat : undefined,
-        lng: (data.lng !== undefined && !isNaN(data.lng)) ? data.lng : undefined,
-        mapLink: data.mapLink || undefined,
+        time: data.time || '',
+        description: data.description || '',
+        placeId: data.placeId || '',
+        mapLink: data.mapLink || '',
       };
+      
+      // Only add numeric fields if they have valid values
+      if (data.lat !== undefined && !isNaN(data.lat)) cleanedData.lat = data.lat;
+      if (data.lng !== undefined && !isNaN(data.lng)) cleanedData.lng = data.lng;
 
       if (isGuestTrip) {
         // Guest mode
