@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Activity, ActivityFormData } from '@/types/itinerary';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,10 @@ import {
 import { useAddActivity, useUpdateActivity } from '@/hooks/useTripData';
 import { useGuestTrips } from '@/hooks/useGuestTrips';
 import { useAuth } from '@/contexts/AuthContext';
+
+const TAG_OPTIONS = [
+  'breakfast', 'lunch', 'dinner', 'snacks', 'local food', 'beach visit', 'hiking', 'camping', 'museum visits', 'sightseeing', 'reading', 'sleeping in', 'skydiving', 'water sports'
+];
 
 interface ActivityFormDialogProps {
   open: boolean;
@@ -36,11 +40,11 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
 }) => {
   const { currentUser } = useAuth();
   const isGuestTrip = tripId.startsWith('guest_');
-  
+
   // Firebase hooks
   const addFirebaseActivity = useAddActivity();
   const updateFirebaseActivity = useUpdateActivity();
-  
+
   // Guest hooks
   const { addActivity: addGuestActivity, updateActivity: updateGuestActivity } = useGuestTrips();
 
@@ -54,20 +58,24 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
   } = useForm<ActivityFormData>({
     defaultValues: activity
       ? {
-          title: activity.title,
-          allDay: activity.allDay,
-          time: activity.time,
-          description: activity.description,
-          placeId: activity.placeId,
-          lat: activity.lat,
-          lng: activity.lng,
-          mapLink: activity.mapLink,
-        }
-      : undefined,
+        title: activity.title,
+        allDay: activity.allDay,
+        time: activity.time,
+        description: activity.description,
+        placeId: activity.placeId,
+        lat: activity.lat,
+        lng: activity.lng,
+        mapLink: activity.mapLink,
+        tags: activity.tags || [],
+      }
+      : {
+        tags: [],
+      },
   });
 
   const isAllDay = watch('allDay');
-  
+  const [selectedTags, setSelectedTags] = useState<string[]>(activity?.tags || []);
+
   // Clear time when all day is checked
   useEffect(() => {
     if (isAllDay) {
@@ -85,8 +93,9 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
         description: data.description || '',
         placeId: data.placeId || '',
         mapLink: data.mapLink || '',
+        tags: selectedTags,
       };
-      
+
       // Only add numeric fields if they have valid values
       if (data.lat !== undefined && !isNaN(data.lat)) cleanedData.lat = data.lat;
       if (data.lng !== undefined && !isNaN(data.lng)) cleanedData.lng = data.lng;
@@ -104,7 +113,7 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
           console.error('User not authenticated');
           return;
         }
-        
+
         if (mode === 'create') {
           await addFirebaseActivity.mutateAsync({
             tripId,
@@ -187,6 +196,50 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
               {...register('description')}
               rows={3}
             />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Tags</Label>
+              {selectedTags.length > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedTags([])}
+                  className="text-xs h-7 px-2"
+                >
+                  Clear All
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+              {TAG_OPTIONS.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => {
+                    const isSelected = selectedTags.includes(tag);
+                    if (isSelected) {
+                      setSelectedTags(selectedTags.filter(t => t !== tag));
+                    } else {
+                      setSelectedTags([...selectedTags, tag]);
+                    }
+                  }}
+                  className={`px-3 py-1 text-sm rounded-full border transition-colors ${selectedTags.includes(tag)
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-background text-foreground border-input hover:bg-accent hover:text-accent-foreground'
+                    }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+            {selectedTags.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Selected: {selectedTags.join(', ')}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">

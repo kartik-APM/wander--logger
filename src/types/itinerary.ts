@@ -10,6 +10,7 @@ export interface Activity {
   lat?: number;
   lng?: number;
   mapLink?: string;
+  tags?: string[];
   createdBy: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -40,4 +41,5 @@ export interface ActivityFormData {
   lat?: number;
   lng?: number;
   mapLink?: string;
+  tags?: string[];
 }
