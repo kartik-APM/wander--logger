@@ -15,3 +15,7 @@
 | Setup Firebase | [Firebase Setup](./FIREBASE_SETUP.md) |
 | Understand guest mode | [Guest Mode](./GUEST_MODE.md) |
 | Troubleshoot deployment | [Deployment Guide](./DEPLOYMENT_GUIDE.md) |
+
+---
+
+© 2026 **Kartik Kumar Panday**. All rights reserved.

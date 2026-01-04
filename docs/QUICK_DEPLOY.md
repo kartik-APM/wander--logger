@@ -49,6 +49,10 @@ After deployment, your app will be available at:
 
 ---
 
+© 2026 **Kartik Kumar Panday**. All rights reserved.
+
+---
+
 ## Useful Commands
 
 ```bash

@@ -48,6 +48,13 @@ firebase deploy
 ## Production Checklist
 
 - [ ] Google Authentication enabled
+- [ ] Firestore Database created
+- [ ] Security rules deployed
+- [ ] Domain authorization configured
+
+---
+
+© 2026 **Kartik Kumar Panday**. All rights reserved.
 - [ ] Firestore rules deployed  
 - [ ] Test sign-in and trip creation
 - [ ] Test on mobile devices

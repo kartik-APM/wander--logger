@@ -44,3 +44,7 @@ const isGuestTrip = tripId.startsWith('guest_');
 ## Migration
 
 Currently manual - guest trips remain in localStorage after sign-in. Users can reference them when creating cloud trips.
+
+---
+
+© 2026 **Kartik Kumar Panday**. All rights reserved.

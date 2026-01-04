@@ -48,7 +48,9 @@ npm run deploy:preview          # Deploy to preview channel
 | Issue | Solution |
 |-------|----------|
 | Command not found | `npm install -g firebase-tools` or use `npx firebase-tools` |
-| Not authorized | `firebase logout && firebase login` |
+---
+
+© 2026 **Kartik Kumar Panday**. All rights reserved.| Not authorized | `firebase logout && firebase login` |
 | Build errors | `rm -rf dist node_modules && npm install && npm run build` |
 
 ## Notes

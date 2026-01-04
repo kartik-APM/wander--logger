@@ -10,13 +10,23 @@ A collaborative trip planning application inspired by Wanderlog. Plan your perfe
 ## ✨ Features
 
 - **🔐 Google Authentication** - Secure login with Firebase Auth
+- **� Guest Mode** - Plan trips without signing in using local storage
 - **📅 Trip Management** - Create and organize multiple trips with date ranges
 - **🗓️ Day-by-Day Itinerary** - Plan activities for each day of your trip
 - **📍 Location Integration** - Add locations with latitude/longitude coordinates
 - **🗺️ Interactive Maps** - Visualize your route with Google Maps integration
 - **👥 Real-time Collaboration** - Invite friends and collaborate on trip planning
+- **📧 Email Invitations** - Send trip invitations to collaborators via email
 - **⚡ Live Sync** - Real-time updates across all collaborators using Firestore
+- **📝 Trip Notes** - Add and manage notes and links for each trip
+- **📊 Day Reviews** - Rate and review each day of your trip
+- **🏷️ Activity Tags** - Organize activities with custom tags
+- **🕒 Time Scheduling** - Set specific times or all-day events for activities
+- **🔄 Offline Support** - Guest trips work without internet connection
+- **👥 Participant Management** - View collaborator profiles and avatars
 - **📱 Responsive Design** - Works seamlessly on desktop and mobile devices
+- **🎨 Visual Design** - Color-coded trip cards and modern UI components
+- **⚙️ Smart Configuration** - Environment validation with helpful setup prompts
 
 ## 🛠️ Tech Stack
 
@@ -331,7 +341,11 @@ This project is open source and available under the MIT License.
 
 ## 👨‍💻 Author
 
-Built with ❤️ by Kartik Kumar Panday
+Built with ❤️ by **Kartik Kumar Panday**
+
+## 📝 Copyright
+
+© 2026 Kartik Kumar Panday. All rights reserved.
 
 ---
 
