@@ -5,7 +5,7 @@ import { Trip } from '@/types/trip';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ParticipantAvatars } from '@/components/ui/ParticipantAvatars';
 import { useParticipantProfiles } from '@/hooks/useParticipantProfiles';
-import { getRandomTripColor } from '@/lib/utils';
+import { getDailyTripColor } from '@/lib/utils';
 
 interface TripCardProps {
   trip: Trip;
@@ -19,7 +19,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, onClick }) => {
   );
   
   // Use useMemo to ensure color is stable for this trip card instance
-  const gradientColor = useMemo(() => getRandomTripColor(), []);
+  const gradientColor = useMemo(() => getDailyTripColor(trip.id), [trip.id]);
 
   return (
     <Card

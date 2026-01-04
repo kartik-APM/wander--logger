@@ -1,9 +1,9 @@
-import { useState, memo } from 'react';
+import { useState, memo, useMemo } from 'react';
 import { Clock, MapPin, Trash2, Edit, ExternalLink } from 'lucide-react';
 import { Activity } from '@/types/itinerary';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn, getDailyTripColor } from '@/lib/utils';
 import { ActivityFormDialog } from './ActivityFormDialog';
 
 interface ActivityCardProps {
@@ -30,6 +30,9 @@ const ActivityCardComponent: React.FC<ActivityCardProps> = ({
   onActivityModified,
 }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
+  // Generate daily bgColor (updates at 2 PM) unique to this trip
+  const bgColor = useMemo(() => getDailyTripColor(tripId), [tripId]);
 
   return (
     <>
@@ -43,6 +46,19 @@ const ActivityCardComponent: React.FC<ActivityCardProps> = ({
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold text-base mb-2 truncate">{activity.title}</h4>
+            
+            {activity.tags && activity.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-2">
+                {activity.tags.map((tag) => (
+                    <span
+                    key={tag}
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full bg-gradient-to-r ${bgColor} text-white text-xs font-medium opacity-80`}
+                    >
+                    {tag}
+                    </span>
+                ))}
+              </div>
+            )}
             
             {activity.allDay ? (
               <div className="inline-flex items-center gap-1.5 px-2 py-0.5 mb-2 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">

@@ -63,3 +63,31 @@ export const getRandomTripColor = (): string => {
   
   return nextColor;
 };
+
+// Generate color based on current date (changes daily at 2 PM) and tripId
+export const getDailyTripColor = (tripId: string): string => {
+  const now = new Date();
+  const currentHour = now.getHours();
+  
+  // If it's before 2 PM, use yesterday's date for color calculation
+  const colorDate = new Date(now);
+  if (currentHour < 14) {
+    colorDate.setDate(colorDate.getDate() - 1);
+  }
+  
+  // Create a date string for consistent hashing (YYYY-MM-DD format)
+  const dateString = colorDate.toISOString().split('T')[0];
+  
+  // Combine date and tripId for unique daily colors per trip
+  const hashString = `${dateString}-${tripId}`;
+  
+  // Simple hash function based on date + tripId
+  let hash = 0;
+  for (let i = 0; i < hashString.length; i++) {
+    const char = hashString.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  
+  return TRIP_COLORS[Math.abs(hash) % TRIP_COLORS.length];
+};
