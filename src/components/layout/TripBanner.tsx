@@ -20,6 +20,9 @@ export const TripBanner: React.FC<TripBannerProps> = ({ trip }) => {
   const startDate = new Date(trip.startDate);
   const endDate = new Date(trip.endDate);
   
+  // Calculate number of days
+  const numberOfDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  
   // Check if current user is the owner of the trip
   const isOwner = currentUser && trip.ownerId === currentUser.uid;
   const isGuestTrip = trip.id.startsWith('guest_');
@@ -38,7 +41,7 @@ export const TripBanner: React.FC<TripBannerProps> = ({ trip }) => {
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
                   <span>
-                    {format(startDate, 'MMMM d, yyyy')} - {format(endDate, 'MMMM d, yyyy')}
+                    {format(startDate, 'MMMM d, yyyy')} - {format(endDate, 'MMMM d, yyyy')} ({numberOfDays} {numberOfDays === 1 ? 'day' : 'days'})
                   </span>
                 </div>
                 {!isGuestTrip && !participantsLoading && participants.length > 0 && (

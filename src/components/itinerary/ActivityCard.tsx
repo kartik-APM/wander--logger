@@ -15,6 +15,7 @@ interface ActivityCardProps {
   onClick?: () => void;
   isSelected?: boolean;
   showFullDescription?: boolean;
+  onActivityModified?: () => Promise<void>;
 }
 
 const ActivityCardComponent: React.FC<ActivityCardProps> = ({
@@ -26,6 +27,7 @@ const ActivityCardComponent: React.FC<ActivityCardProps> = ({
   onClick,
   isSelected,
   showFullDescription = false,
+  onActivityModified,
 }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
@@ -113,7 +115,12 @@ const ActivityCardComponent: React.FC<ActivityCardProps> = ({
 
       <ActivityFormDialog
         open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
+        onOpenChange={async (open) => {
+          if (!open && isEditDialogOpen && onActivityModified) {
+            await onActivityModified();
+          }
+          setIsEditDialogOpen(open);
+        }}
         tripId={tripId}
         dateKey={dateKey}
         activity={activity}

@@ -16,7 +16,7 @@ import {
 import { db } from './firebase';
 import { Trip, TripFormData, Invitation, Note } from '../types/trip';
 import { User } from '../types/user';
-import { Activity, ActivityFormData } from '../types/itinerary';
+import { Activity, ActivityFormData, DayReview } from '../types/itinerary';
 import { eachDayOfInterval, format } from 'date-fns';
 
 // ============================================
@@ -474,6 +474,113 @@ export const deleteNote = async (
 
   await updateDoc(tripRef, {
     notes: filteredNotes,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+// ============================================
+// DAY REVIEW OPERATIONS
+// ============================================
+
+export const addDayReview = async (
+  tripId: string,
+  dateKey: string,
+  userId: string,
+  rating: number,
+  review?: string
+): Promise<void> => {
+  const tripRef = doc(db, 'trips', tripId);
+  const tripDoc = await getDoc(tripRef);
+
+  if (!tripDoc.exists()) {
+    throw new Error('Trip not found');
+  }
+
+  const trip = tripDoc.data() as Trip;
+  const dayReview: DayReview = {
+    rating,
+    review,
+    reviewedBy: userId,
+    reviewedAt: Timestamp.now(),
+  };
+
+  const updatedDays = {
+    ...trip.days,
+    [dateKey]: {
+      ...trip.days[dateKey],
+      dayReview,
+    },
+  };
+
+  await updateDoc(tripRef, {
+    days: updatedDays,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+export const updateDayReview = async (
+  tripId: string,
+  dateKey: string,
+  rating: number,
+  review?: string
+): Promise<void> => {
+  const tripRef = doc(db, 'trips', tripId);
+  const tripDoc = await getDoc(tripRef);
+
+  if (!tripDoc.exists()) {
+    throw new Error('Trip not found');
+  }
+
+  const trip = tripDoc.data() as Trip;
+  const existingReview = trip.days[dateKey]?.dayReview;
+
+  if (!existingReview) {
+    throw new Error('Day review not found');
+  }
+
+  const updatedReview: DayReview = {
+    ...existingReview,
+    rating,
+    review,
+    reviewedAt: Timestamp.now(),
+  };
+
+  const updatedDays = {
+    ...trip.days,
+    [dateKey]: {
+      ...trip.days[dateKey],
+      dayReview: updatedReview,
+    },
+  };
+
+  await updateDoc(tripRef, {
+    days: updatedDays,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+export const deleteDayReview = async (
+  tripId: string,
+  dateKey: string
+): Promise<void> => {
+  const tripRef = doc(db, 'trips', tripId);
+  const tripDoc = await getDoc(tripRef);
+
+  if (!tripDoc.exists()) {
+    throw new Error('Trip not found');
+  }
+
+  const trip = tripDoc.data() as Trip;
+  const updatedDayData = { ...trip.days[dateKey] };
+  delete updatedDayData.dayReview;
+
+  const updatedDays = {
+    ...trip.days,
+    [dateKey]: updatedDayData,
+  };
+
+  await updateDoc(tripRef, {
+    days: updatedDays,
     updatedAt: serverTimestamp(),
   });
 };

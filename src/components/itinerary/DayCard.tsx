@@ -1,5 +1,5 @@
 import { useState, memo } from 'react';
-import { format } from 'date-fns';
+import { format, isAfter, parseISO, startOfDay } from 'date-fns';
 import { Plus } from 'lucide-react';
 import { Activity } from '@/types/itinerary';
 import {
@@ -10,30 +10,45 @@ import {
 import { Button } from '@/components/ui/button';
 import { ActivityCard } from './ActivityCard';
 import { ActivityFormDialog } from './ActivityFormDialog';
-import { useDeleteActivity } from '@/hooks/useTripData';
+import { DayReviewComponent } from './DayReviewComponent';
+import { useDeleteActivity, useAddDayReview, useUpdateDayReview, useDeleteDayReview } from '@/hooks/useTripData';
 import { useGuestTrips } from '@/hooks/useGuestTrips';
 import { useTripStore } from '@/store/tripStore';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DayCardProps {
   dateKey: string;
   activities: Activity[];
   tripId: string;
+  existingReview?: any; // DayReview from the trip data
 }
 
-const DayCardComponent: React.FC<DayCardProps> = ({ dateKey, activities, tripId }) => {
+const DayCardComponent: React.FC<DayCardProps> = ({ dateKey, activities, tripId, existingReview }) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { selectedActivity, setSelectedActivity } = useTripStore();
+  const { currentUser } = useAuth();
   const isGuestTrip = tripId.startsWith('guest_');
   
   // Firebase hooks
   const deleteFirebaseActivity = useDeleteActivity();
+  const addFirebaseReview = useAddDayReview();
+  const updateFirebaseReview = useUpdateDayReview();
+  const deleteFirebaseReview = useDeleteDayReview();
   
   // Guest hooks
-  const { deleteActivity: deleteGuestActivity } = useGuestTrips();
+  const { 
+    deleteActivity: deleteGuestActivity, 
+    addDayReview: addGuestReview,
+    updateDayReview: updateGuestReview,
+    deleteDayReview: deleteGuestReview
+  } = useGuestTrips();
 
   const date = new Date(dateKey);
   const dayOfWeek = format(date, 'EEEE');
   const formattedDate = format(date, 'MMMM d, yyyy');
+  
+  // Check if this day is over (past today)
+  const isDayOver = isAfter(startOfDay(new Date()), parseISO(dateKey));
 
   const handleDeleteActivity = async (activityId: string) => {
     if (window.confirm('Are you sure you want to delete this activity?')) {
@@ -45,6 +60,57 @@ const DayCardComponent: React.FC<DayCardProps> = ({ dateKey, activities, tripId 
       if (selectedActivity?.id === activityId) {
         setSelectedActivity(null);
       }
+      
+      // Remove day review if activities change and day is over
+      if (isDayOver && existingReview) {
+        await handleDeleteReview();
+      }
+    }
+  };
+
+  const handleSaveReview = async (rating: number, review?: string) => {
+    const userId = currentUser?.uid || 'guest';
+    
+    if (isGuestTrip) {
+      if (existingReview) {
+        updateGuestReview(tripId, dateKey, rating, review);
+      } else {
+        addGuestReview(tripId, dateKey, rating, review);
+      }
+    } else {
+      if (existingReview) {
+        await updateFirebaseReview.mutateAsync({
+          tripId,
+          dateKey,
+          rating,
+          review,
+        });
+      } else {
+        await addFirebaseReview.mutateAsync({
+          tripId,
+          dateKey,
+          userId,
+          rating,
+          review,
+        });
+      }
+    }
+  };
+
+  const handleDeleteReview = async () => {
+    if (isGuestTrip) {
+      deleteGuestReview(tripId, dateKey);
+    } else {
+      await deleteFirebaseReview.mutateAsync({
+        tripId,
+        dateKey,
+      });
+    }
+  };
+
+  const handleActivityModified = async () => {
+    if (isDayOver && existingReview) {
+      await handleDeleteReview();
     }
   };
 
@@ -107,6 +173,7 @@ const DayCardComponent: React.FC<DayCardProps> = ({ dateKey, activities, tripId 
                     onClick={() => setSelectedActivity(activity)}
                     isSelected={selectedActivity?.id === activity.id}
                     showFullDescription={true}
+                    onActivityModified={handleActivityModified}
                   />
                 ))}
                 <Button
@@ -120,13 +187,28 @@ const DayCardComponent: React.FC<DayCardProps> = ({ dateKey, activities, tripId 
                 </Button>
               </>
             )}
+            
+            {/* Show review component if day is over */}
+            {isDayOver && (
+              <DayReviewComponent
+                existingReview={existingReview}
+                onSaveReview={handleSaveReview}
+                onDeleteReview={handleDeleteReview}
+              />
+            )}
           </div>
         </AccordionContent>
       </AccordionItem>
 
       <ActivityFormDialog
         open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
+        onOpenChange={async (open) => {
+          // If closing after adding an activity and review exists, remove the review
+          if (!open && isAddDialogOpen && isDayOver && existingReview) {
+            await handleDeleteReview();
+          }
+          setIsAddDialogOpen(open);
+        }}
         tripId={tripId}
         dateKey={dateKey}
         mode="create"

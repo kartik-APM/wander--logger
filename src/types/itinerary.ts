@@ -15,8 +15,16 @@ export interface Activity {
   updatedAt: Timestamp;
 }
 
+export interface DayReview {
+  rating: number;
+  review?: string;
+  reviewedBy: string;
+  reviewedAt: Timestamp;
+}
+
 export interface DayActivities {
   activities: Activity[];
+  dayReview?: DayReview;
 }
 
 export interface DaysMap {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Trip, TripFormData } from '@/types/trip';
-import { ActivityFormData } from '@/types/itinerary';
+import { ActivityFormData, DayReview } from '@/types/itinerary';
 import { localStorageService } from '@/lib/localStorage';
 import { Timestamp } from 'firebase/firestore';
 
@@ -118,6 +118,57 @@ export const useGuestTrips = () => {
     setTrips(localStorageService.getGuestTrips());
   };
 
+  const addDayReview = (tripId: string, dateKey: string, rating: number, review?: string): void => {
+    const trip = getTrip(tripId);
+    if (!trip) return;
+
+    const dayReview: DayReview = {
+      rating,
+      review,
+      reviewedBy: 'guest',
+      reviewedAt: Timestamp.now(),
+    };
+
+    if (!trip.days[dateKey]) {
+      trip.days[dateKey] = { activities: [] };
+    }
+
+    trip.days[dateKey].dayReview = dayReview;
+    trip.updatedAt = Timestamp.now();
+
+    localStorageService.saveGuestTrip(trip);
+    setTrips(localStorageService.getGuestTrips());
+  };
+
+  const updateDayReview = (tripId: string, dateKey: string, rating: number, review?: string): void => {
+    const trip = getTrip(tripId);
+    if (!trip || !trip.days[dateKey]?.dayReview) return;
+
+    const updatedReview: DayReview = {
+      ...trip.days[dateKey].dayReview!,
+      rating,
+      review,
+      reviewedAt: Timestamp.now(),
+    };
+
+    trip.days[dateKey].dayReview = updatedReview;
+    trip.updatedAt = Timestamp.now();
+
+    localStorageService.saveGuestTrip(trip);
+    setTrips(localStorageService.getGuestTrips());
+  };
+
+  const deleteDayReview = (tripId: string, dateKey: string): void => {
+    const trip = getTrip(tripId);
+    if (!trip || !trip.days[dateKey]?.dayReview) return;
+
+    delete trip.days[dateKey].dayReview;
+    trip.updatedAt = Timestamp.now();
+
+    localStorageService.saveGuestTrip(trip);
+    setTrips(localStorageService.getGuestTrips());
+  };
+
   return {
     trips,
     loading,
@@ -128,5 +179,8 @@ export const useGuestTrips = () => {
     addActivity,
     updateActivity,
     deleteActivity,
+    addDayReview,
+    updateDayReview,
+    deleteDayReview,
   };
 };

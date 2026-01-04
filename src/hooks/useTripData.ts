@@ -10,6 +10,9 @@ import {
   deleteActivity,
   subscribeToTrip,
   createInvitation,
+  addDayReview,
+  updateDayReview,
+  deleteDayReview,
 } from '../lib/firestore';
 import { Trip, TripFormData } from '../types/trip';
 import { ActivityFormData } from '../types/itinerary';
@@ -153,6 +156,67 @@ export const useCreateInvitation = () => {
       invitedEmail: string;
       invitedBy: string;
     }) => createInvitation(tripId, invitedEmail, invitedBy),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['trip', variables.tripId] });
+    },
+  });
+};
+
+export const useAddDayReview = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      tripId,
+      dateKey,
+      userId,
+      rating,
+      review,
+    }: {
+      tripId: string;
+      dateKey: string;
+      userId: string;
+      rating: number;
+      review?: string;
+    }) => addDayReview(tripId, dateKey, userId, rating, review),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['trip', variables.tripId] });
+    },
+  });
+};
+
+export const useUpdateDayReview = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      tripId,
+      dateKey,
+      rating,
+      review,
+    }: {
+      tripId: string;
+      dateKey: string;
+      rating: number;
+      review?: string;
+    }) => updateDayReview(tripId, dateKey, rating, review),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['trip', variables.tripId] });
+    },
+  });
+};
+
+export const useDeleteDayReview = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      tripId,
+      dateKey,
+    }: {
+      tripId: string;
+      dateKey: string;
+    }) => deleteDayReview(tripId, dateKey),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['trip', variables.tripId] });
     },
