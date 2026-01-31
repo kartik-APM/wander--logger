@@ -7,26 +7,69 @@ A collaborative trip planning application inspired by Wanderlog. Plan your perfe
 ![Firebase](https://img.shields.io/badge/Firebase-10.8.0-orange)
 ![Vite](https://img.shields.io/badge/Vite-5.1.0-purple)
 
+## 📸 Screenshots
+
+### Dashboard
+![Dashboard - My Trips](./docs/images/dashboard.png)
+*View all your trips with participant avatars, dates, and duration*
+
+### Trip Planning & Map
+![Trip Page - Itinerary and Map](./docs/images/trip-page.png)
+*Plan day-by-day activities with interactive map visualization showing routes and markers*
+
+### Notes & Links
+![Notes Panel](./docs/images/notes-panel.png)
+*Save important links, restaurant recommendations, and travel resources*
+
 ## ✨ Features
 
-- **🔐 Google Authentication** - Secure login with Firebase Auth
-- **� Guest Mode** - Plan trips without signing in using local storage
+### Core Trip Planning
 - **📅 Trip Management** - Create and organize multiple trips with date ranges
-- **🗓️ Day-by-Day Itinerary** - Plan activities for each day of your trip
+- **🗓️ Day-by-Day Itinerary** - Plan activities for each day of your trip with expandable day cards
+- **🏙️ City Tags** - Assign cities/locations to each day for better organization
 - **📍 Location Integration** - Add locations with latitude/longitude coordinates
-- **🗺️ Interactive Maps** - Visualize your route with Google Maps integration
-- **👥 Real-time Collaboration** - Invite friends and collaborate on trip planning
-- **📧 Email Invitations** - Send trip invitations to collaborators via email
-- **⚡ Live Sync** - Real-time updates across all collaborators using Firestore
-- **📝 Trip Notes** - Add and manage notes and links for each trip
-- **📊 Day Reviews** - Rate and review each day of your trip
-- **🏷️ Activity Tags** - Organize activities with custom tags
 - **🕒 Time Scheduling** - Set specific times or all-day events for activities
-- **🔄 Offline Support** - Guest trips work without internet connection
-- **👥 Participant Management** - View collaborator profiles and avatars
+- **🏷️ Activity Tags** - Organize activities with custom tags
+- **📝 Rich Notes System** - Add notes with support for:
+  - Google Maps links for places and restaurants
+  - YouTube links for travel inspiration
+  - External URLs and references
+  - Edit and delete capabilities
+
+### Visualization & Maps
+- **🗺️ Interactive Maps** - Real-time visualization of your trip route
+  - Activity markers showing all planned locations
+  - Automatic route drawing between activities
+  - Toggle between Map and Satellite views
+  - Full-screen map mode
+  - Integrated with Google Maps for accurate navigation
+
+### Collaboration & Sharing
+- **👥 Real-time Collaboration** - Invite friends and collaborate on trip planning
+- **📧 Email Invitations** - Send trip invitations via "Invite Friends" button
+- **⚡ Live Sync** - Real-time updates across all collaborators using Firestore
+- **👤 Participant Avatars** - Visual display of trip participants with profile pictures
+- **👥 Participant Management** - View all collaborators on trip cards and trip pages
+
+### Dashboard & UI
+- **🎨 Beautiful Trip Cards** - Visual trip cards featuring:
+  - Trip title with location icon
+  - Date ranges with calendar icon
+  - Participant avatars
+  - Duration summary (e.g., "5 days planned")
+  - Modern card-based layout
 - **📱 Responsive Design** - Works seamlessly on desktop and mobile devices
-- **🎨 Visual Design** - Color-coded trip cards and modern UI components
+- **🎯 Trip Banner** - Comprehensive trip header showing dates, duration, and participants
+
+### Authentication & Access
+- **🔐 Google Authentication** - Secure login with Firebase Auth
+- **👻 Guest Mode** - Plan trips without signing in using local storage
+- **🔄 Offline Support** - Guest trips work without internet connection
+
+### System Features
+- **📊 Day Reviews** - Rate and review each day of your trip
 - **⚙️ Smart Configuration** - Environment validation with helpful setup prompts
+- **🔄 Auto-save** - All changes saved automatically to Firestore
 
 ## 🛠️ Tech Stack
 
@@ -207,39 +250,65 @@ src/
 
 ### Creating a Trip
 
-1. **Sign in** with your Google account
-2. Click **"New Trip"** on the dashboard
+1. **Sign in** with your Google account (or use Guest Mode)
+2. Click the **"+ New Trip"** button on the dashboard
 3. Enter trip details:
-   - Trip title
+   - Trip title (e.g., "Vietnam, 2026" or "Pondicherry")
    - Start date
    - End date
 4. Click **"Create Trip"**
+5. Your new trip card will appear on the dashboard showing:
+   - Trip name with location pin icon
+   - Date range
+   - Your profile avatar as the first participant
+   - Number of days planned
 
-### Adding Activities
+### Planning Your Itinerary
 
-1. Open a trip from your dashboard
-2. Expand a day by clicking on it
-3. Click **"Add Activity"**
-4. Fill in activity details:
-   - Title (required)
-   - Time
+1. **Open a trip** from your dashboard by clicking on the trip card
+2. **View the trip banner** showing full trip details, dates, and participants
+3. **Expand a day** by clicking on any day card in the itinerary panel
+4. **Add city/location** to each day using the city tag feature
+5. Click **"Add Activity"** to create activities:
+   - Title (required) - e.g., "Hoan Kiem lake", "Flight to Hanoi"
+   - Time (optional) - set specific times or mark as all-day
    - Description
    - Latitude/Longitude (for map display)
-5. Click **"Add Activity"**
+6. Click **"Add Activity"** to save
 
-### Viewing on Map
+### Adding Trip Notes
 
-Activities with coordinates will automatically appear on the map. The route between activities is drawn automatically.
+1. Click the **"Notes"** button in the trip header
+2. Click **"+ Add Note"** to create a new note
+3. Add useful information like:
+   - Restaurant recommendations (e.g., "The Pasta Bar Veneto", "Baker Street")
+   - Google Maps links to places
+   - YouTube videos for inspiration
+   - Hotel information (e.g., "Villa Shanti Hotel Restaurant")
+   - Any other useful URLs or text
+4. Edit or delete notes using the icons next to each note
 
-### Collaboration
+### Viewing on the Interactive Map
+
+1. Activities with coordinates automatically appear as markers on the map
+2. The route between activities is drawn automatically with blue lines
+3. Toggle between **Map** and **Satellite** views
+4. Click the fullscreen icon to expand the map
+5. Map updates in real-time as you add or modify activities
+
+### Inviting Collaborators
 
 > **Note**: Invitation system requires Firebase Functions for email sending (optional feature)
 
 1. Open a trip
-2. Click the share/invite button
-3. Enter collaborator's email
+2. Click the **"Invite Friends"** button in the trip header
+3. Enter collaborator's email address
 4. They'll receive an invitation link
-5. Once accepted, they can view and edit the trip
+5. Once accepted, they can:
+   - View and edit the trip
+   - Add activities and notes
+   - See real-time updates
+6. Collaborator avatars appear on the trip card and trip page
 
 ## 🏗️ Build for Production
 
