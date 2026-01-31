@@ -2,6 +2,7 @@
 
 ## Guides
 
+- **[Setup Guide](./SETUP.md)** - Complete development environment setup
 - **[Quick Deploy](./QUICK_DEPLOY.md)** - Fast deployment reference
 - **[Deployment Guide](./DEPLOYMENT_GUIDE.md)** - Full deployment instructions
 - **[Firebase Setup](./FIREBASE_SETUP.md)** - Firebase configuration
@@ -11,6 +12,7 @@
 
 | Task | Guide |
 |------|-------|
+| Setup development environment | [Setup Guide](./SETUP.md) |
 | Deploy app | [Quick Deploy](./QUICK_DEPLOY.md) |
 | Setup Firebase | [Firebase Setup](./FIREBASE_SETUP.md) |
 | Understand guest mode | [Guest Mode](./GUEST_MODE.md) |

@@ -16,6 +16,20 @@ firebase login
 
 Firebase is already configured (`firebase.json` and `.firebaserc` exist).
 
+## Build for Production
+
+```bash
+npm run build
+```
+
+The build output will be in the `dist/` directory.
+
+Preview the production build:
+
+```bash
+npm run preview
+```
+
 ## Deploy
 
 ```bash
@@ -28,6 +42,22 @@ firebase deploy --only hosting
 ```
 
 **Live URL:** https://wander--logger.web.app
+
+### Deploy to Vercel
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+### Environment Variables
+
+Remember to set environment variables in your hosting platform:
+- Vercel: Project Settings → Environment Variables
+- Firebase: Environment variables are baked into the build from `.env`
 
 ## Useful Commands
 
