@@ -20,9 +20,10 @@ const renderTextWithLinks = (text: string) => {
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
-          className="text-blue-600 hover:text-blue-800 hover:underline"
+          className="inline-flex items-center gap-1 hover:opacity-70"
         >
-          {part}
+          <span>{part}</span>
+          <ExternalLink className="h-3.5 w-3.5 inline text-blue-600" />
         </a>
       );
     }
