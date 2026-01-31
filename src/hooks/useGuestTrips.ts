@@ -169,6 +169,21 @@ export const useGuestTrips = () => {
     setTrips(localStorageService.getGuestTrips());
   };
 
+  const updateDayCity = (tripId: string, dateKey: string, city: string): void => {
+    const trip = getTrip(tripId);
+    if (!trip) return;
+
+    if (!trip.days[dateKey]) {
+      trip.days[dateKey] = { activities: [] };
+    }
+
+    trip.days[dateKey].city = city;
+    trip.updatedAt = Timestamp.now();
+
+    localStorageService.saveGuestTrip(trip);
+    setTrips(localStorageService.getGuestTrips());
+  };
+
   return {
     trips,
     loading,
@@ -182,5 +197,6 @@ export const useGuestTrips = () => {
     addDayReview,
     updateDayReview,
     deleteDayReview,
+    updateDayCity,
   };
 };

@@ -8,10 +8,11 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ActivityCard } from './ActivityCard';
 import { ActivityFormDialog } from './ActivityFormDialog';
 import { DayReviewComponent } from './DayReviewComponent';
-import { useDeleteActivity, useAddDayReview, useUpdateDayReview, useDeleteDayReview } from '@/hooks/useTripData';
+import { useDeleteActivity, useAddDayReview, useUpdateDayReview, useDeleteDayReview, useUpdateDayCity } from '@/hooks/useTripData';
 import { useGuestTrips } from '@/hooks/useGuestTrips';
 import { useTripStore } from '@/store/tripStore';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,10 +22,13 @@ interface DayCardProps {
   activities: Activity[];
   tripId: string;
   existingReview?: any; // DayReview from the trip data
+  existingCity?: string;
 }
 
-const DayCardComponent: React.FC<DayCardProps> = ({ dateKey, activities, tripId, existingReview }) => {
+const DayCardComponent: React.FC<DayCardProps> = ({ dateKey, activities, tripId, existingReview, existingCity }) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [dayCity, setDayCity] = useState(existingCity || '');
+  const [showCityInput, setShowCityInput] = useState(!existingCity);
   const { selectedActivity, setSelectedActivity } = useTripStore();
   const { currentUser } = useAuth();
   const isGuestTrip = tripId.startsWith('guest_');
@@ -34,13 +38,15 @@ const DayCardComponent: React.FC<DayCardProps> = ({ dateKey, activities, tripId,
   const addFirebaseReview = useAddDayReview();
   const updateFirebaseReview = useUpdateDayReview();
   const deleteFirebaseReview = useDeleteDayReview();
+  const updateFirebaseDayCity = useUpdateDayCity();
   
   // Guest hooks
   const { 
     deleteActivity: deleteGuestActivity, 
     addDayReview: addGuestReview,
     updateDayReview: updateGuestReview,
-    deleteDayReview: deleteGuestReview
+    deleteDayReview: deleteGuestReview,
+    updateDayCity: updateGuestDayCity
   } = useGuestTrips();
 
   const date = new Date(dateKey);
@@ -118,13 +124,62 @@ const DayCardComponent: React.FC<DayCardProps> = ({ dateKey, activities, tripId,
     // Edit is handled by the ActivityCard's dialog
   };
 
+  const handleSaveDayCity = async (city: string) => {
+    if (isGuestTrip) {
+      updateGuestDayCity(tripId, dateKey, city);
+    } else {
+      await updateFirebaseDayCity.mutateAsync({ tripId, dateKey, city });
+    }
+  };
+
   return (
     <>
       <AccordionItem value={dateKey} className="border rounded-lg mb-3 overflow-hidden">
         <div className="flex items-stretch bg-muted/50 hover:bg-muted">
           {/* Left side - Non-clickable content */}
           <div className="flex-1 px-6 py-4 text-left">
-            <h3 className="text-lg font-bold">{dayOfWeek}</h3>
+            <div className="flex items-center gap-3">
+              <h3 className="text-lg font-bold">{dayOfWeek}</h3>
+              {showCityInput || !dayCity ? (
+                <Input
+                  type="text"
+                  placeholder="City"
+                  value={dayCity}
+                  onChange={(e) => setDayCity(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && dayCity.trim()) {
+                      setShowCityInput(false);
+                      e.currentTarget.blur();
+                      handleSaveDayCity(dayCity);
+                    }
+                  }}
+                  onBlur={() => {
+                    if (dayCity.trim()) {
+                      setShowCityInput(false);
+                      handleSaveDayCity(dayCity);
+                    }
+                  }}
+                  className="h-7 w-32 text-sm"
+                />
+              ) : (
+                <div className="flex items-center gap-2">
+                  {dayCity.split(',').map((city, index) => {
+                    const trimmedCity = city.trim();
+                    if (!trimmedCity) return null;
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setShowCityInput(true)}
+                        title="City you spend the day in"
+                        className="px-3 py-1 text-sm rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer"
+                      >
+                        {trimmedCity}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground">{formattedDate}</p>
             {activities.length > 0 ? (
               <div className="mt-2 space-y-1">

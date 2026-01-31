@@ -3,6 +3,7 @@ import { Timestamp } from 'firebase/firestore';
 export interface Activity {
   id: string;
   title: string;
+  city?: string;
   allDay?: boolean;
   time?: string;
   description?: string;
@@ -26,6 +27,7 @@ export interface DayReview {
 export interface DayActivities {
   activities: Activity[];
   dayReview?: DayReview;
+  city?: string;
 }
 
 export interface DaysMap {
@@ -34,6 +36,7 @@ export interface DaysMap {
 
 export interface ActivityFormData {
   title: string;
+  city?: string;
   allDay?: boolean;
   time?: string;
   description?: string;

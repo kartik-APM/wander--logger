@@ -140,7 +140,7 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>
             {mode === 'create' ? 'Add Activity' : 'Edit Activity'}
@@ -151,7 +151,7 @@ export const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
               : 'Update activity details'}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 overflow-y-auto flex-1 pl-2 pr-3">
           <div className="space-y-2">
             <Label htmlFor="title">Activity Title *</Label>
             <Input

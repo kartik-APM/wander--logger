@@ -571,12 +571,39 @@ export const deleteDayReview = async (
   }
 
   const trip = tripDoc.data() as Trip;
-  const updatedDayData = { ...trip.days[dateKey] };
-  delete updatedDayData.dayReview;
-
   const updatedDays = {
     ...trip.days,
-    [dateKey]: updatedDayData,
+    [dateKey]: {
+      ...trip.days[dateKey],
+      dayReview: undefined,
+    },
+  };
+
+  await updateDoc(tripRef, {
+    days: updatedDays,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+export const updateDayCity = async (
+  tripId: string,
+  dateKey: string,
+  city: string
+): Promise<void> => {
+  const tripRef = doc(db, 'trips', tripId);
+  const tripDoc = await getDoc(tripRef);
+
+  if (!tripDoc.exists()) {
+    throw new Error('Trip not found');
+  }
+
+  const trip = tripDoc.data() as Trip;
+  const updatedDays = {
+    ...trip.days,
+    [dateKey]: {
+      ...trip.days[dateKey],
+      city,
+    },
   };
 
   await updateDoc(tripRef, {

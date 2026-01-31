@@ -6,6 +6,30 @@ import { Button } from '@/components/ui/button';
 import { cn, getDailyTripColor } from '@/lib/utils';
 import { ActivityFormDialog } from './ActivityFormDialog';
 
+const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+
+const renderTextWithLinks = (text: string) => {
+  const parts = text.split(URL_REGEX);
+  
+  return parts.map((part, index) => {
+    if (part.match(URL_REGEX)) {
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          {part}
+        </a>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+};
+
 interface ActivityCardProps {
   activity: Activity;
   tripId: string;
@@ -97,7 +121,7 @@ const ActivityCardComponent: React.FC<ActivityCardProps> = ({
                 "text-sm text-muted-foreground mt-2 whitespace-pre-wrap",
                 !showFullDescription && "line-clamp-2"
               )}>
-                {activity.description}
+                {renderTextWithLinks(activity.description)}
               </p>
             )}
           </div>

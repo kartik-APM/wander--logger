@@ -13,6 +13,7 @@ import {
   addDayReview,
   updateDayReview,
   deleteDayReview,
+  updateDayCity,
 } from '../lib/firestore';
 import { Trip, TripFormData } from '../types/trip';
 import { ActivityFormData } from '../types/itinerary';
@@ -217,6 +218,25 @@ export const useDeleteDayReview = () => {
       tripId: string;
       dateKey: string;
     }) => deleteDayReview(tripId, dateKey),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['trip', variables.tripId] });
+    },
+  });
+};
+
+export const useUpdateDayCity = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      tripId,
+      dateKey,
+      city,
+    }: {
+      tripId: string;
+      dateKey: string;
+      city: string;
+    }) => updateDayCity(tripId, dateKey, city),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['trip', variables.tripId] });
     },

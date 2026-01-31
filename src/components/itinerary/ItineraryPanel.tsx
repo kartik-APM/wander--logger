@@ -35,6 +35,7 @@ const ItineraryPanelComponent: React.FC<ItineraryPanelProps> = ({ trip }) => {
               activities={trip.days[dateKey]?.activities || []}
               tripId={trip.id}
               existingReview={trip.days[dateKey]?.dayReview}
+              existingCity={trip.days[dateKey]?.city}
             />
           ))}
         </Accordion>
