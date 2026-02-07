@@ -12,6 +12,7 @@ export interface Activity {
   lng?: number;
   mapLink?: string;
   tags?: string[];
+  order?: number;
   createdBy: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;

@@ -3,6 +3,21 @@ import { format, isAfter, parseISO, startOfDay } from 'date-fns';
 import { Plus } from 'lucide-react';
 import { Activity } from '@/types/itinerary';
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
@@ -12,7 +27,7 @@ import { Input } from '@/components/ui/input';
 import { ActivityCard } from './ActivityCard';
 import { ActivityFormDialog } from './ActivityFormDialog';
 import { DayReviewComponent } from './DayReviewComponent';
-import { useDeleteActivity, useAddDayReview, useUpdateDayReview, useDeleteDayReview, useUpdateDayCity } from '@/hooks/useTripData';
+import { useDeleteActivity, useAddDayReview, useUpdateDayReview, useDeleteDayReview, useUpdateDayCity, useReorderActivities } from '@/hooks/useTripData';
 import { useGuestTrips } from '@/hooks/useGuestTrips';
 import { useTripStore } from '@/store/tripStore';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,6 +54,7 @@ const DayCardComponent: React.FC<DayCardProps> = ({ dateKey, activities, tripId,
   const updateFirebaseReview = useUpdateDayReview();
   const deleteFirebaseReview = useDeleteDayReview();
   const updateFirebaseDayCity = useUpdateDayCity();
+  const reorderFirebaseActivities = useReorderActivities();
   
   // Guest hooks
   const { 
@@ -46,8 +62,16 @@ const DayCardComponent: React.FC<DayCardProps> = ({ dateKey, activities, tripId,
     addDayReview: addGuestReview,
     updateDayReview: updateGuestReview,
     deleteDayReview: deleteGuestReview,
-    updateDayCity: updateGuestDayCity
+    updateDayCity: updateGuestDayCity,
+    reorderActivities: reorderGuestActivities
   } = useGuestTrips();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const date = new Date(dateKey);
   const dayOfWeek = format(date, 'EEEE');
@@ -122,6 +146,27 @@ const DayCardComponent: React.FC<DayCardProps> = ({ dateKey, activities, tripId,
 
   const handleEditActivity = () => {
     // Edit is handled by the ActivityCard's dialog
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = activities.findIndex((act) => act.id === active.id);
+      const newIndex = activities.findIndex((act) => act.id === over.id);
+
+      const reorderedActivities = arrayMove(activities, oldIndex, newIndex);
+
+      if (isGuestTrip) {
+        reorderGuestActivities(tripId, dateKey, reorderedActivities);
+      } else {
+        await reorderFirebaseActivities.mutateAsync({
+          tripId,
+          dateKey,
+          reorderedActivities,
+        });
+      }
+    }
   };
 
   const handleSaveDayCity = async (city: string) => {
@@ -217,20 +262,31 @@ const DayCardComponent: React.FC<DayCardProps> = ({ dateKey, activities, tripId,
               </div>
             ) : (
               <>
-                {activities.map((activity) => (
-                  <ActivityCard
-                    key={activity.id}
-                    activity={activity}
-                    tripId={tripId}
-                    dateKey={dateKey}
-                    onEdit={handleEditActivity}
-                    onDelete={handleDeleteActivity}
-                    onClick={() => setSelectedActivity(activity)}
-                    isSelected={selectedActivity?.id === activity.id}
-                    showFullDescription={true}
-                    onActivityModified={handleActivityModified}
-                  />
-                ))}
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={activities.map((act) => act.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {activities.map((activity) => (
+                      <ActivityCard
+                        key={activity.id}
+                        activity={activity}
+                        tripId={tripId}
+                        dateKey={dateKey}
+                        onEdit={handleEditActivity}
+                        onDelete={handleDeleteActivity}
+                        onClick={() => setSelectedActivity(activity)}
+                        isSelected={selectedActivity?.id === activity.id}
+                        showFullDescription={true}
+                        onActivityModified={handleActivityModified}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
                 <Button
                   onClick={() => setIsAddDialogOpen(true)}
                   variant="outline"

@@ -195,6 +195,7 @@ export const addActivity = async (
   const updatedDays = {
     ...trip.days,
     [dateKey]: {
+      ...trip.days[dateKey],
       activities: [...(trip.days[dateKey]?.activities || []), newActivity],
     },
   };
@@ -251,6 +252,7 @@ export const updateActivity = async (
   const updatedDays = {
     ...trip.days,
     [dateKey]: {
+      ...trip.days[dateKey],
       activities: updatedActivities,
     },
   };
@@ -280,7 +282,35 @@ export const deleteActivity = async (
   const updatedDays = {
     ...trip.days,
     [dateKey]: {
+      ...trip.days[dateKey],
       activities: filteredActivities,
+    },
+  };
+
+  await updateDoc(tripRef, {
+    days: updatedDays,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+export const reorderActivities = async (
+  tripId: string,
+  dateKey: string,
+  reorderedActivities: Activity[]
+): Promise<void> => {
+  const tripRef = doc(db, 'trips', tripId);
+  const tripDoc = await getDoc(tripRef);
+
+  if (!tripDoc.exists()) {
+    throw new Error('Trip not found');
+  }
+
+  const trip = tripDoc.data() as Trip;
+  const updatedDays = {
+    ...trip.days,
+    [dateKey]: {
+      ...trip.days[dateKey],
+      activities: reorderedActivities,
     },
   };
 

@@ -1,5 +1,7 @@
 import { useState, memo, useMemo } from 'react';
-import { Clock, MapPin, Trash2, Edit, ExternalLink } from 'lucide-react';
+import { Clock, MapPin, Trash2, Edit, ExternalLink, GripVertical } from 'lucide-react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Activity } from '@/types/itinerary';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,20 +58,45 @@ const ActivityCardComponent: React.FC<ActivityCardProps> = ({
 }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: activity.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+  
   // Generate daily bgColor (updates at 2 PM) unique to this trip
   const bgColor = useMemo(() => getDailyTripColor(tripId), [tripId]);
 
   return (
     <>
       <Card
+        ref={setNodeRef}
+        style={style}
         className={cn(
           'p-4 cursor-pointer hover:shadow-md transition-all',
-          isSelected && 'ring-2 ring-primary'
+          isSelected && 'ring-2 ring-primary',
+          isDragging && 'opacity-50'
         )}
         onClick={onClick}
       >
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
+          <button
+            className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-muted-foreground hover:text-foreground touch-none"
+            {...attributes}
+            {...listeners}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="h-5 w-5" />
+          </button>
+          <div className="flex-1 min-w-0 -ml-1">
             <h4 className="font-semibold text-base mb-2 truncate">{activity.title}</h4>
             
             {activity.tags && activity.tags.length > 0 && (

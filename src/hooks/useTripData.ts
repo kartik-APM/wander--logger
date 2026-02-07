@@ -8,6 +8,7 @@ import {
   addActivity,
   updateActivity,
   deleteActivity,
+  reorderActivities,
   subscribeToTrip,
   createInvitation,
   addDayReview,
@@ -16,7 +17,7 @@ import {
   updateDayCity,
 } from '../lib/firestore';
 import { Trip, TripFormData } from '../types/trip';
-import { ActivityFormData } from '../types/itinerary';
+import { Activity, ActivityFormData } from '../types/itinerary';
 import { useEffect } from 'react';
 import { useTripStore } from '../store/tripStore';
 
@@ -237,6 +238,25 @@ export const useUpdateDayCity = () => {
       dateKey: string;
       city: string;
     }) => updateDayCity(tripId, dateKey, city),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['trip', variables.tripId] });
+    },
+  });
+};
+
+export const useReorderActivities = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      tripId,
+      dateKey,
+      reorderedActivities,
+    }: {
+      tripId: string;
+      dateKey: string;
+      reorderedActivities: Activity[];
+    }) => reorderActivities(tripId, dateKey, reorderedActivities),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['trip', variables.tripId] });
     },
