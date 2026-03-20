@@ -5,6 +5,7 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { TripPage } from './pages/TripPage';
 import { InvitationPage } from './pages/InvitationPage';
+import { SharedTripPage } from './pages/SharedTripPage';
 import { ConfigCheck } from './components/ConfigCheck';
 
 const queryClient = new QueryClient({
@@ -50,6 +51,8 @@ function App() {
                 <Route path="/trip/:tripId" element={<TripPage />} />
                 {/* Invitation acceptance - accessible to everyone */}
                 <Route path="/invite/:invitationId" element={<InvitationPage />} />
+                {/* Public shared trip view - no auth required */}
+                <Route path="/shared/:shareToken" element={<SharedTripPage />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>

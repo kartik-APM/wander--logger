@@ -10,9 +10,10 @@ service cloud.firestore {
     
     // Trips
     match /trips/{tripId} {
-      // Anyone can read trips they're a participant in
-      allow read: if request.auth != null && 
-                     request.auth.uid in resource.data.participants;
+      // Anyone can read trips they're a participant in OR if the trip is publicly shared
+      allow read: if (request.auth != null && 
+                     request.auth.uid in resource.data.participants) ||
+                     resource.data.isPubliclyShared == true;
       
       // Only the owner can create a trip
       allow create: if request.auth != null && 

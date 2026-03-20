@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Calendar, UserPlus, StickyNote } from 'lucide-react';
+import { Calendar, UserPlus, StickyNote, Share2 } from 'lucide-react';
 import { Trip } from '@/types/trip';
 import { Button } from '@/components/ui/button';
 import { InviteDialog } from '@/components/itinerary/InviteDialog';
+import { ShareDialog } from '@/components/itinerary/ShareDialog';
 import { NotesSection } from '@/components/layout/NotesSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { ParticipantAvatars } from '@/components/ui/ParticipantAvatars';
@@ -16,6 +17,7 @@ interface TripBannerProps {
 export const TripBanner: React.FC<TripBannerProps> = ({ trip }) => {
   const { currentUser } = useAuth();
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const startDate = new Date(trip.startDate);
   const endDate = new Date(trip.endDate);
@@ -75,15 +77,26 @@ export const TripBanner: React.FC<TripBannerProps> = ({ trip }) => {
                 Notes
               </Button>
               {isOwner && !isGuestTrip && (
-                <Button
-                  onClick={() => setInviteDialogOpen(true)}
-                  variant="secondary"
-                  size="sm"
-                  className="bg-white text-blue-600 hover:bg-blue-50 gap-2"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  Invite Friends
-                </Button>
+                <>
+                  <Button
+                    onClick={() => setShareDialogOpen(true)}
+                    variant="secondary"
+                    size="sm"
+                    className="bg-white text-blue-600 hover:bg-blue-50 gap-2"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    Share
+                  </Button>
+                  <Button
+                    onClick={() => setInviteDialogOpen(true)}
+                    variant="secondary"
+                    size="sm"
+                    className="bg-white text-blue-600 hover:bg-blue-50 gap-2"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Invite Friends
+                  </Button>
+                </>
               )}
             </div>
           </div>
@@ -91,11 +104,18 @@ export const TripBanner: React.FC<TripBannerProps> = ({ trip }) => {
       </div>
       
       {!isGuestTrip && (
-        <InviteDialog
-          open={inviteDialogOpen}
-          onOpenChange={setInviteDialogOpen}
-          tripId={trip.id}
-        />
+        <>
+          <InviteDialog
+            open={inviteDialogOpen}
+            onOpenChange={setInviteDialogOpen}
+            tripId={trip.id}
+          />
+          <ShareDialog
+            open={shareDialogOpen}
+            onOpenChange={setShareDialogOpen}
+            trip={trip}
+          />
+        </>
       )}
       
       <NotesSection

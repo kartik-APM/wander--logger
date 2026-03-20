@@ -641,3 +641,99 @@ export const updateDayCity = async (
     updatedAt: serverTimestamp(),
   });
 };
+
+// ============================================
+// SHARE OPERATIONS
+// ============================================
+
+const generateShareToken = (tripId: string): string => {
+  const randomPart = Math.random().toString(36).substr(2, 8);
+  // Encode tripId in base64 and append random string for obfuscation
+  const encodedId = btoa(tripId);
+  return `${encodedId}_${randomPart}`;
+};
+
+const extractTripIdFromToken = (shareToken: string): string | null => {
+  try {
+    const parts = shareToken.split('_');
+    if (parts.length < 1) return null;
+    // The first part is the base64 encoded trip ID
+    return atob(parts[0]);
+  } catch {
+    return null;
+  }
+};
+
+export const enablePublicSharing = async (tripId: string): Promise<string> => {
+  const tripRef = doc(db, 'trips', tripId);
+  const tripDoc = await getDoc(tripRef);
+
+  if (!tripDoc.exists()) {
+    throw new Error('Trip not found');
+  }
+
+  const trip = tripDoc.data() as Trip;
+  
+  // Check if existing token is valid (can extract tripId from it)
+  if (trip.shareToken && trip.isPubliclyShared) {
+    const extractedId = extractTripIdFromToken(trip.shareToken);
+    if (extractedId === tripId) {
+      // Token is valid and in correct format
+      return trip.shareToken;
+    }
+    // Token is in old format, regenerate it
+  }
+
+  const shareToken = generateShareToken(tripId);
+  
+  await updateDoc(tripRef, {
+    shareToken,
+    isPubliclyShared: true,
+    updatedAt: serverTimestamp(),
+  });
+
+  return shareToken;
+};
+
+export const disablePublicSharing = async (tripId: string): Promise<void> => {
+  const tripRef = doc(db, 'trips', tripId);
+  
+  await updateDoc(tripRef, {
+    isPubliclyShared: false,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+export const getSharedTrip = async (shareToken: string): Promise<Trip | null> => {
+  // Decode URL-encoded token if needed
+  const decodedToken = decodeURIComponent(shareToken);
+  
+  // Extract trip ID from the share token
+  const tripId = extractTripIdFromToken(decodedToken);
+  
+  if (!tripId) {
+    return null;
+  }
+
+  try {
+    // Fetch trip directly by ID - Firestore rules allow read if isPubliclyShared is true
+    const tripRef = doc(db, 'trips', tripId);
+    const tripDoc = await getDoc(tripRef);
+
+    if (!tripDoc.exists()) {
+      return null;
+    }
+
+    const trip = { id: tripDoc.id, ...tripDoc.data() } as Trip;
+    
+    // Verify the trip is publicly shared and token matches
+    if (!trip.isPubliclyShared || trip.shareToken !== decodedToken) {
+      return null;
+    }
+
+    return trip;
+  } catch (error) {
+    console.error('Error fetching shared trip:', error);
+    return null;
+  }
+};

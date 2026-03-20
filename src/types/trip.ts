@@ -21,6 +21,8 @@ export interface Trip {
   updatedAt: Timestamp;
   days: DaysMap;
   notes?: Note[];
+  shareToken?: string;
+  isPubliclyShared?: boolean;
 }
 
 export interface TripFormData {

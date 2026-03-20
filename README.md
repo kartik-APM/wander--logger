@@ -60,6 +60,8 @@ A collaborative trip planning application inspired by Wanderlog. Plan your perfe
 - **⚡ Live Sync** - Real-time updates across all collaborators using Firestore
 - **👤 Participant Avatars** - Visual display of trip participants with profile pictures
 - **👥 Participant Management** - View all collaborators on trip cards and trip pages
+- **🔗 Public Sharing** - Share your itinerary with anyone via a public link (no login required)
+- **📄 PDF Export** - Download your itinerary as a PDF for offline access
 
 ### Dashboard & UI
 - **🎨 Beautiful Trip Cards** - Visual trip cards featuring:
@@ -140,6 +142,18 @@ A collaborative trip planning application inspired by Wanderlog. Plan your perfe
    - Add activities and notes
    - See real-time updates
 6. Collaborator avatars appear on the trip card and trip page
+
+### Sharing Your Itinerary
+
+1. Open a trip you own
+2. Click the **"Share"** button in the trip header
+3. Click **"Enable Public Sharing"** to generate a shareable link
+4. Copy the link and share it with anyone
+5. Recipients can:
+   - View the full itinerary without logging in
+   - See all activities, times, and descriptions
+   - Download the itinerary as a PDF
+6. You can disable sharing anytime to revoke access
 
 ## 🤝 Contributing
 
